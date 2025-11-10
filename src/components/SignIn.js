@@ -24,7 +24,7 @@ function Signin() {
           textShadow: '2px 2px 4px rgba(139, 92, 246, 0.2)',
         }}
       >
-        HAPPY BIRTHDAY IVY
+        HAPPY BIRTHDAY SADIE
       </h1>
       <p style={{ marginBottom: '24px' }}>Click the button below to login!</p>
       <Button
