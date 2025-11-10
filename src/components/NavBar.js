@@ -27,14 +27,7 @@ export default function NavBar() {
   };
 
   return (
-    <Navbar
-      collapseOnSelect
-      expand="lg"
-      variant="dark"
-      style={{
-        background: 'linear-gradient(135deg, var(--party-secondary), var(--party-accent))',
-      }}
-    >
+    <Navbar collapseOnSelect expand="lg" variant="dark" className="nav-ocean">
       <Container>
         <Link passHref href="/" className="navbar-brand">
           {PARTY_CONFIG.name}
@@ -55,17 +48,18 @@ export default function NavBar() {
           <Button
             onClick={signOut}
             style={{
-              backgroundColor: '#8b5cf6',
-              borderColor: '#8b5cf6',
+              backgroundColor: 'var(--party-primary)',
+              borderColor: 'var(--party-primary)',
               color: '#fff',
+              transition: 'var(--party-transition)',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#7c3aed';
-              e.currentTarget.style.borderColor = '#7c3aed';
+              e.currentTarget.style.backgroundColor = 'var(--party-secondary)';
+              e.currentTarget.style.borderColor = 'var(--party-secondary)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#8b5cf6';
-              e.currentTarget.style.borderColor = '#8b5cf6';
+              e.currentTarget.style.backgroundColor = 'var(--party-primary)';
+              e.currentTarget.style.borderColor = 'var(--party-primary)';
             }}
           >
             Sign Out

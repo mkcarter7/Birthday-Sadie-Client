@@ -18,10 +18,10 @@ function Signin() {
           fontSize: '48px',
           fontWeight: 600,
           marginBottom: '30px',
-          color: '#8b5cf6',
+          color: 'var(--party-primary)',
           fontFamily: 'var(--font-fredoka), "Fredoka", sans-serif',
           letterSpacing: '1px',
-          textShadow: '2px 2px 4px rgba(139, 92, 246, 0.2)',
+          textShadow: '2px 2px 6px rgba(0, 0, 0, 0.18)',
         }}
       >
         HAPPY BIRTHDAY SADIE
@@ -33,17 +33,18 @@ function Signin() {
         className="copy-btn"
         onClick={signIn}
         style={{
-          backgroundColor: '#8b5cf6',
-          borderColor: '#8b5cf6',
+          backgroundColor: 'var(--party-primary)',
+          borderColor: 'var(--party-primary)',
           color: '#fff',
+          transition: 'var(--party-transition)',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#7c3aed';
-          e.currentTarget.style.borderColor = '#7c3aed';
+          e.currentTarget.style.backgroundColor = 'var(--party-secondary)';
+          e.currentTarget.style.borderColor = 'var(--party-secondary)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = '#8b5cf6';
-          e.currentTarget.style.borderColor = '#8b5cf6';
+          e.currentTarget.style.backgroundColor = 'var(--party-primary)';
+          e.currentTarget.style.borderColor = 'var(--party-primary)';
         }}
       >
         Sign In

@@ -27,6 +27,11 @@ export const PARTY_CONFIG = {
   backgroundImage: process.env.NEXT_PUBLIC_BACKGROUND_IMAGE || '/images/gary-background.jpg',
   loggedInBackgroundImage: process.env.NEXT_PUBLIC_LOGGED_IN_BACKGROUND_IMAGE || '/images/member-background.jpg',
 
+  // ===== LOGGED-IN THEME =====
+  loggedInPrimaryColor: process.env.NEXT_PUBLIC_LOGGED_IN_PRIMARY_COLOR || process.env.NEXT_PUBLIC_PRIMARY_COLOR || '#3B82F6',
+  loggedInSecondaryColor: process.env.NEXT_PUBLIC_LOGGED_IN_SECONDARY_COLOR || process.env.NEXT_PUBLIC_SECONDARY_COLOR || '#8B5CF6',
+  loggedInAccentColor: process.env.NEXT_PUBLIC_LOGGED_IN_ACCENT_COLOR || process.env.NEXT_PUBLIC_ACCENT_COLOR || '#F59E0B',
+
   // ===== THEME CUSTOMIZATION =====
   // Colors and styling - customize these for each party
   primaryColor: process.env.NEXT_PUBLIC_PRIMARY_COLOR || '#3B82F6', // Main brand color
