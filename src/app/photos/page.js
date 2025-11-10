@@ -82,10 +82,18 @@ export default function PhotosPage() {
     try {
       const token = await user.getIdToken(true);
 
-      const res = await fetch('/api/photos', {
+      const baseApi = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
+      const uploadUrl = `${baseApi}/api/photos/`;
+
+      if (!baseApi) {
+        throw new Error('API base URL is not configured.');
+      }
+
+      const res = await fetch(uploadUrl, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
         },
         body: formData,
       });
@@ -98,7 +106,7 @@ export default function PhotosPage() {
         // Refresh the page to show new photos
         window.location.reload();
       } else {
-        setMessage(`Upload failed: ${data.error || 'Unknown error'}`);
+        setMessage(`Upload failed: ${data.detail || data.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Upload error:', error);

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import PropTypes from 'prop-types';
 
-export default function PageHeader({ title, subtitle }) {
+export default function PageHeader({ title, subtitle = '' }) {
   return (
     <header style={{ margin: '8px 0 16px' }}>
       <div className="card" style={{ padding: 16 }}>
@@ -26,8 +26,4 @@ export default function PageHeader({ title, subtitle }) {
 PageHeader.propTypes = {
   title: PropTypes.string.isRequired,
   subtitle: PropTypes.string,
-};
-
-PageHeader.defaultProps = {
-  subtitle: '',
 };

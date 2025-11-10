@@ -3,13 +3,77 @@
 import PageHeader from '@/components/PageHeader';
 import { PARTY_CONFIG } from '@/config/party';
 
+const HOUR_MS = 60 * 60 * 1000;
+
+const parseDateWithTime = (dateStr, timeStr) => {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return null;
+
+  if (!timeStr) {
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
+
+  const trimmedTime = timeStr.trim();
+  if (!trimmedTime) {
+    return date;
+  }
+
+  const meridiemMatch = trimmedTime.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i);
+  if (meridiemMatch) {
+    let hours = parseInt(meridiemMatch[1], 10);
+    const minutes = meridiemMatch[2] ? parseInt(meridiemMatch[2], 10) : 0;
+    const meridiem = meridiemMatch[3].toUpperCase();
+
+    if (hours === 12) {
+      hours = meridiem === 'AM' ? 0 : 12;
+    } else if (meridiem === 'PM') {
+      hours += 12;
+    }
+
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+  }
+
+  const numericMatch = trimmedTime.match(/(\d{1,2})(?::(\d{2}))?/);
+  if (numericMatch) {
+    const hours = parseInt(numericMatch[1], 10);
+    const minutes = numericMatch[2] ? parseInt(numericMatch[2], 10) : 0;
+    date.setHours(hours, minutes, 0, 0);
+  }
+
+  return date;
+};
+
+const getEventWindow = () => {
+  const { date, time } = PARTY_CONFIG;
+  if (!date) {
+    return { start: null, end: null };
+  }
+
+  const segments = time?.split('-') || [];
+  const startTime = segments[0] ? segments[0].trim() : time;
+  const endTime = segments[1] ? segments[1].trim() : null;
+
+  const start = parseDateWithTime(date, startTime);
+  let end = endTime ? parseDateWithTime(date, endTime) : null;
+
+  if (start && (!end || end <= start)) {
+    end = new Date(start.getTime() + 2 * HOUR_MS);
+  }
+
+  return { start, end };
+};
+
+const { start: eventStart, end: eventEnd } = getEventWindow();
+
 const eventDetails = {
   title: PARTY_CONFIG.name,
   description: PARTY_CONFIG.welcomeMessage,
   location: PARTY_CONFIG.location,
-  // Local date-times; adjust as needed
-  start: new Date('2025-08-15T19:00:00'),
-  end: new Date('2025-08-15T23:00:00'),
+  start: eventStart || new Date(),
+  end: eventEnd || new Date((eventStart || new Date()).getTime() + 2 * HOUR_MS),
 };
 
 function formatToGoogle(dt) {
@@ -54,13 +118,19 @@ function buildICS(evt) {
 export default function CalendarPage() {
   const googleUrl = buildGoogleUrl(eventDetails);
   const outlookUrl = buildOutlookUrl(eventDetails);
+  const eventSlug = PARTY_CONFIG.name
+    ? PARTY_CONFIG.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+    : 'party';
 
   const handleAppleDownload = () => {
     const blob = buildICS(eventDetails);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'ivys-birthday.ics';
+    a.download = `${eventSlug || 'party'}-calendar.ics`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -69,7 +139,7 @@ export default function CalendarPage() {
 
   return (
     <main className="page">
-      <PageHeader title="Add to Calendar" subtitle="Save Ivy's 2nd Birthday to your calendar" />
+      <PageHeader title="Add to Calendar" subtitle={`Save ${PARTY_CONFIG.name} to your calendar`} />
       <div className="card" style={{ display: 'grid', gap: 12 }}>
         <a className="tile tile-blue" style={{ height: 64 }} href={googleUrl} target="_blank" rel="noreferrer">
           Add to Google Calendar
