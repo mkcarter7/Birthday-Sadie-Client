@@ -23,6 +23,10 @@ export const PARTY_CONFIG = {
   latitude: process.env.NEXT_PUBLIC_PARTY_LATITUDE || '35.50000000000001',
   longitude: process.env.NEXT_PUBLIC_PARTY_LONGITUDE || '-86.39999999999999',
 
+  // ===== BACKGROUNDS =====
+  backgroundImage: process.env.NEXT_PUBLIC_BACKGROUND_IMAGE || '/images/gary-background.jpg',
+  loggedInBackgroundImage: process.env.NEXT_PUBLIC_LOGGED_IN_BACKGROUND_IMAGE || '/images/member-background.jpg',
+
   // ===== THEME CUSTOMIZATION =====
   // Colors and styling - customize these for each party
   primaryColor: process.env.NEXT_PUBLIC_PRIMARY_COLOR || '#3B82F6', // Main brand color

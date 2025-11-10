@@ -21,6 +21,11 @@ body{
   overflow-x: hidden;
   width: 100%;
 }
+body.logged-in-background{
+  background-repeat: no-repeat, no-repeat;
+  background-size: cover, cover;
+  background-position: center, center;
+}
 
 .page{
   max-width: 1000px;

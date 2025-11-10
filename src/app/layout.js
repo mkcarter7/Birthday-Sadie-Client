@@ -27,7 +27,7 @@ export const fredoka = Fredoka({ subsets: ['latin'], weight: ['400', '500', '600
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} ${fredoka.variable}`}>
+      <body className={`${inter.className} ${fredoka.variable}`} style={{ '--bg-image-url': `url('${PARTY_CONFIG.backgroundImage}')` }}>
         <ClientProvider>{children}</ClientProvider>
       </body>
     </html>
