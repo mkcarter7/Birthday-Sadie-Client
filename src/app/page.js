@@ -424,9 +424,9 @@ export default function Home() {
       <PhotoCarousel />
 
       <section className="thanks card" style={{ textAlign: 'center' }}>
-        <h2>Thank You!</h2>
-        <p>Ivy&apos;s 2nd birthday party was absolutely magical thanks to all of you! Your presence, gifts, and memories made this celebration unforgettable.</p>
-        <p className="muted">Photos and memories from the party are now available in the gallery.</p>
+        <h2>{PARTY_CONFIG.thankYouTitle}</h2>
+        <p>{PARTY_CONFIG.thankYouMessage}</p>
+        <p className="muted">{PARTY_CONFIG.thankYouSubmessage}</p>
       </section>
     </main>
   );
