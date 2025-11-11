@@ -8,6 +8,7 @@ import { signIn } from '@/utils/auth';
 import { isAdmin } from '@/utils/admin';
 import { PARTY_CONFIG } from '@/config/party';
 import { getLeaderboard } from '@/utils/gameScores';
+import TimelineManager from '@/components/TimelineManager';
 
 const deriveDisplayName = (record) => {
   if (!record || typeof record !== 'object') return 'Guest';
@@ -585,15 +586,15 @@ export default function AdminDashboard() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h3 style={{ margin: 0 }}>Guestbook Messages ({messages.length})</h3>
           <Link href="/guestbook" style={{ fontSize: 14, color: '#8b5cf6', textDecoration: 'none' }}>
-            View full guestbook →
+            View guestbook as guest →
           </Link>
         </div>
 
         {messages.length === 0 ? (
           <p className="muted">No guestbook messages yet.</p>
         ) : (
-          <div style={{ display: 'grid', gap: 12, maxHeight: '500px', overflowY: 'auto' }}>
-            {messages.slice(0, 10).map((msg) => (
+          <div style={{ display: 'grid', gap: 12 }}>
+            {messages.map((msg) => (
               <div
                 key={msg.id}
                 style={{
@@ -651,77 +652,11 @@ export default function AdminDashboard() {
                 <div style={{ fontSize: 14, color: '#374151', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{msg.message || msg.text || 'No message content'}</div>
               </div>
             ))}
-            {messages.length > 10 && (
-              <div style={{ textAlign: 'center', padding: 16, color: '#6b7280', fontSize: 14 }}>
-                ... and {messages.length - 10} more message{messages.length - 10 !== 1 ? 's' : ''}
-              </div>
-            )}
           </div>
         )}
       </div>
 
-      {/* Quick Links */}
-      <div className="card">
-        <h3 style={{ marginTop: 0, marginBottom: 16 }}>Quick Links</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-          <Link
-            href="/admin/rsvps"
-            className="tile tile-purple"
-            style={{
-              height: 48,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textDecoration: 'none',
-              border: 'none',
-            }}
-          >
-            👥 Detailed RSVP View
-          </Link>
-          <Link
-            href="/guestbook"
-            className="tile tile-teal"
-            style={{
-              height: 48,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textDecoration: 'none',
-              border: 'none',
-            }}
-          >
-            💬 Full Guestbook
-          </Link>
-          <Link
-            href="/photos"
-            className="tile tile-pink"
-            style={{
-              height: 48,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textDecoration: 'none',
-              border: 'none',
-            }}
-          >
-            📷 View Photos
-          </Link>
-          <Link
-            href="/games"
-            className="tile tile-orange"
-            style={{
-              height: 48,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textDecoration: 'none',
-              border: 'none',
-            }}
-          >
-            🎮 Games & Leaderboard
-          </Link>
-        </div>
-      </div>
+      <TimelineManager cardStyle={{}} />
     </main>
   );
 }
