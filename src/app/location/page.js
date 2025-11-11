@@ -7,6 +7,8 @@ export default function LocationPage() {
       <PageHeader title="Location" subtitle="Directions and parking information" />
       <div className="card" style={{ display: 'grid', gap: 12 }}>
         <div style={{ fontWeight: 700 }}>Venue</div>
+        <div>{PARTY_CONFIG.venueName || PARTY_CONFIG.location}</div>
+        <div style={{ fontWeight: 700, marginTop: 8 }}>Address</div>
         <div>{PARTY_CONFIG.location}</div>
         <div style={{ borderRadius: 12, overflow: 'hidden' }}>
           <iframe title="Google Map" width="100%" height="320" style={{ border: 0 }} loading="lazy" allowFullScreen referrerPolicy="no-referrer-when-downgrade" src={`https://www.google.com/maps?q=${encodeURIComponent(PARTY_CONFIG.location)}&output=embed`} />

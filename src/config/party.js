@@ -12,6 +12,7 @@ export const PARTY_CONFIG = {
   name: process.env.NEXT_PUBLIC_PARTY_NAME || 'Sadies 6th Birthday',
   date: process.env.NEXT_PUBLIC_PARTY_DATE || 'Aug 15, 2025',
   time: process.env.NEXT_PUBLIC_PARTY_TIME || '7:00 PM - 11:00 PM',
+  venueName: process.env.NEXT_PUBLIC_PARTY_VENUE_NAME || 'Haley Meadows Farm',
   location: process.env.NEXT_PUBLIC_PARTY_LOCATION || '274 Minkslide Rd, Bell Buckle, TN 37020',
   theme: process.env.NEXT_PUBLIC_PARTY_THEME || '6 Years Later',
 
@@ -80,5 +81,5 @@ export const validatePartyConfig = () => {
 // Helper functions
 export const getPartyDisplayName = () => PARTY_CONFIG.name;
 export const getPartyDate = () => `${PARTY_CONFIG.date} · ${PARTY_CONFIG.time}`;
-export const getPartyLocation = () => PARTY_CONFIG.location;
+export const getPartyLocation = () => PARTY_CONFIG.venueName || PARTY_CONFIG.location;
 export const getPartyTheme = () => PARTY_CONFIG.theme;
