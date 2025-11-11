@@ -467,7 +467,7 @@ export default function GuestbookPage() {
   if (userLoading || loading) {
     return (
       <main className="page">
-        <PageHeader title="Guest Book" subtitle="Leave a sweet message for Ivy" />
+        <PageHeader title="Guest Book" subtitle="Leave a sweet message for Sadie" />
         <div className="card">
           <p className="muted">Loading messages...</p>
         </div>
@@ -477,7 +477,7 @@ export default function GuestbookPage() {
 
   return (
     <main className="page">
-      <PageHeader title="Guest Book" subtitle="Leave a sweet message for Ivy" />
+      <PageHeader title="Guest Book" subtitle="Leave a sweet message for Sadie" />
 
       {error && (
         <div className="card" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', marginBottom: 16 }}>
@@ -508,7 +508,7 @@ export default function GuestbookPage() {
 
       {!user ? (
         <div className="card" style={{ display: 'grid', gap: 12 }}>
-          <p>Sign in to leave a message in Ivy&apos;s guest book!</p>
+          <p>Sign in to leave a message in Sadie&apos;s guest book!</p>
           <button type="button" onClick={signIn} className="tile tile-purple" style={{ height: 48, border: 'none' }}>
             Sign in with Google
           </button>
@@ -523,7 +523,7 @@ export default function GuestbookPage() {
               </label>
               <input id="guestbook-name" type="text" placeholder="Enter your name..." value={name} onChange={(e) => setName(e.target.value)} required style={{ padding: 12, borderRadius: 8, border: '1px solid #e5e7eb' }} />
             </div>
-            <textarea placeholder="Write your message for Ivy..." value={message} onChange={(e) => setMessage(e.target.value)} required rows={4} style={{ padding: 12, borderRadius: 8, border: '1px solid #e5e7eb', resize: 'vertical', fontFamily: 'inherit' }} />
+            <textarea placeholder="Write your message for Sadie..." value={message} onChange={(e) => setMessage(e.target.value)} required rows={4} style={{ padding: 12, borderRadius: 8, border: '1px solid #e5e7eb', resize: 'vertical', fontFamily: 'inherit' }} />
             {error && <p style={{ color: '#ef4444', margin: 0, fontSize: 14 }}>{error}</p>}
             <button
               type="submit"
@@ -546,7 +546,7 @@ export default function GuestbookPage() {
       <div className="card" style={{ display: 'grid', gap: 16 }}>
         <h3>Messages ({messages.length})</h3>
         {messages.length === 0 ? (
-          <p className="muted">No messages yet. Be the first to leave a message for Ivy!</p>
+          <p className="muted">No messages yet. Be the first to leave a message for Sadie!</p>
         ) : (
           <div style={{ display: 'grid', gap: 16 }}>
             {messages.map((msg) => {
