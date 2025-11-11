@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import { useAuth } from '@/utils/context/authContext';
 import { signIn } from '@/utils/auth';
@@ -16,6 +16,19 @@ export default function RsvpPage() {
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [guestName, setGuestName] = useState('');
+
+  useEffect(() => {
+    if (!user) {
+      setGuestName('');
+      return;
+    }
+    setGuestName((prev) => {
+      if (prev && prev.trim().length > 0) return prev;
+      const fallbackName = user.displayName || user.fullName || user.email?.split('@')?.[0] || '';
+      return fallbackName;
+    });
+  }, [user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,6 +39,12 @@ export default function RsvpPage() {
 
     if (!status) {
       setError('Please let us know if you will attend');
+      return;
+    }
+
+    const trimmedName = guestName.trim();
+    if (!trimmedName) {
+      setError('Please provide the name for your RSVP');
       return;
     }
 
@@ -65,6 +84,8 @@ export default function RsvpPage() {
           phone_number: phoneNumber.trim() || '',
           notes: notes.trim() || '',
           party: PARTY_CONFIG.id,
+          user_name: trimmedName,
+          guest_name: trimmedName,
         }),
       });
 
@@ -78,6 +99,7 @@ export default function RsvpPage() {
         setPhoneNumber('');
         setNotes('');
         setError('');
+        setGuestName('');
         // Reset success message after 5 seconds
         setTimeout(() => setSuccess(false), 5000);
       } else if (res.status === 403 || res.status === 401) {
@@ -150,6 +172,12 @@ export default function RsvpPage() {
         <div className="card" style={{ display: 'grid', gap: 16 }}>
           <h3>RSVP Form</h3>
           <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16 }}>
+            <div style={{ display: 'grid', gap: 4 }}>
+              <label htmlFor="rsvp-name" style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>
+                Name to display on RSVP *
+              </label>
+              <input id="rsvp-name" type="text" placeholder="e.g. The Carter Family" value={guestName} onChange={(e) => setGuestName(e.target.value)} required style={{ padding: 12, borderRadius: 8, border: '1px solid #e5e7eb' }} />
+            </div>
             <div style={{ display: 'grid', gap: 8 }}>
               <div style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>Will you be attending? *</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
