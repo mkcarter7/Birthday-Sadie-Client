@@ -1,8 +1,109 @@
 'use client';
 
+import PropTypes from 'prop-types';
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/utils/context/authContext';
 import { signIn } from '@/utils/auth';
+
+function PhotoCard({ photo, index, onImageError }) {
+  const [aspectRatio, setAspectRatio] = useState(null);
+
+  const src = photo.image || photo.url;
+  const uploader = photo.uploaded_by?.full_name || photo.uploaded_by?.username || photo.uploader_name;
+  const photoId = photo.id;
+
+  const handleImageLoad = (event) => {
+    const { naturalWidth, naturalHeight } = event.target;
+    if (naturalWidth && naturalHeight) {
+      setAspectRatio(naturalWidth / naturalHeight);
+    }
+  };
+
+  return (
+    <div
+      key={photoId}
+      style={{
+        minWidth: 'min(480px, calc(100% - 32px))',
+        width: 'min(480px, calc(100% - 32px))',
+        maxWidth: 'min(480px, calc(100% - 32px))',
+        flexShrink: 0,
+        scrollSnapAlign: 'center',
+        borderRadius: 16,
+        overflow: 'hidden',
+        boxShadow: 'var(--ring)',
+        background: 'transparent',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+      }}
+      className="photo-card"
+    >
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          aspectRatio: aspectRatio || 4 / 3,
+          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.18))',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={`Party ${index + 1}`}
+          onError={() => onImageError(photoId)}
+          onLoad={handleImageLoad}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            display: 'block',
+          }}
+        />
+        {uploader && (
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              padding: '12px 16px',
+              background: 'linear-gradient(180deg, rgba(12, 43, 88, 0.05) 0%, rgba(12, 43, 88, 0.75) 100%)',
+              color: 'white',
+              fontSize: '13px',
+              fontWeight: '600',
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            by {uploader}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+PhotoCard.propTypes = {
+  photo: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+    image: PropTypes.string,
+    url: PropTypes.string,
+    uploader_name: PropTypes.string,
+    uploaded_by: PropTypes.shape({
+      full_name: PropTypes.string,
+      username: PropTypes.string,
+    }),
+  }).isRequired,
+  index: PropTypes.number.isRequired,
+  onImageError: PropTypes.func.isRequired,
+};
 
 export default function PhotoCarousel() {
   const { user, userLoading } = useAuth();
@@ -242,23 +343,9 @@ export default function PhotoCarousel() {
           }}
         >
           {photos.map((photo, i) => {
-            const src = photo.image || photo.url;
-            const uploader = photo.uploaded_by?.full_name || photo.uploaded_by?.username || photo.uploader_name;
             const photoId = photo.id;
-            // Like UI removed
             if (hiddenIds.has(photoId)) return null;
-
-            return (
-              <div key={photoId} style={{ minWidth: 'calc((100% - 12px) / 2)', width: 'calc((100% - 12px) / 2)', maxWidth: 'calc((100% - 12px) / 2)', flexShrink: 0, scrollSnapAlign: 'start', borderRadius: 12, overflow: 'hidden', boxShadow: 'var(--ring)', position: 'relative' }} className="photo-card">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt={`Party ${i + 1}`} onError={() => handleImageError(photoId)} style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} />
-
-                {/* Likes removed */}
-
-                {/* Uploader info */}
-                {uploader && <div style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '12px', fontWeight: '600' }}>by {uploader}</div>}
-              </div>
-            );
+            return <PhotoCard key={photoId} photo={photo} index={i} onImageError={handleImageError} />;
           })}
         </div>
       </div>
