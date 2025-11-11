@@ -1,5 +1,6 @@
 import PageHeader from '@/components/PageHeader';
 import Link from 'next/link';
+import { PARTY_CONFIG } from '@/config/party';
 
 export default function RegistryPage() {
   return (
@@ -11,7 +12,7 @@ export default function RegistryPage() {
           <p>Check out Ivy&apos;s birthday wishlist on Amazon!</p>
         </div>
         <Link
-          href="https://www.amazon.de/hz/wishlist/ls/20L96ID00OU75?ref=cm_sw_sm_r_un_un_98xgDOKaqR0gx"
+          href={PARTY_CONFIG.registryUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="tile tile-purple"

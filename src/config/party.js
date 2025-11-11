@@ -18,6 +18,7 @@ export const PARTY_CONFIG = {
   // ===== SOCIAL LINKS =====
   facebookLive: process.env.NEXT_PUBLIC_FACEBOOK_LIVE_URL || 'https://fb.me/1QpPJy5bhsaiawb',
   venmoUsername: process.env.NEXT_PUBLIC_VENMO_USERNAME || 'isabellaCarter_18',
+  registryUrl: process.env.NEXT_PUBLIC_REGISTRY_URL || 'https://www.amazon.com/hz/wishlist/ls/31ZU0SPC9RVD?ref_=wl_share&fbclid=IwY2xjawOATS9leHRuA2FlbQIxMABicmlkETFQVW80UDFTUEhrUWFSUno3c3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHjHmS7QHcO8Xux_kHljuZ3ltD_g1Wau0ODgti0AaMoj_j-CvM1SpULuK4c-a_aem_Y6Uo6beWhBq5kMDQ0KsW_g',
 
   // ===== MAP COORDINATES =====
   latitude: process.env.NEXT_PUBLIC_PARTY_LATITUDE || '35.50000000000001',
