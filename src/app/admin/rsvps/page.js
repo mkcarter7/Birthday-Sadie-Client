@@ -7,11 +7,41 @@ import { signIn } from '@/utils/auth';
 import { isAdmin } from '@/utils/admin';
 import { PARTY_CONFIG } from '@/config/party';
 
+const deriveDisplayName = (record) => {
+  if (!record || typeof record !== 'object') return 'Guest';
+  const recordUser = record.user || {};
+
+  const concatName = (first, last) => {
+    const parts = [first, last].filter((part) => typeof part === 'string' && part.trim().length > 0);
+    return parts.length ? parts.join(' ').trim() : null;
+  };
+
+  const candidates = [record.user_name, record.guest_name, record.display_name, record.name, record.guest_display_name, record.guest_full_name, record.user_full_name, record.user_display_name, record.full_name, recordUser.display_name, recordUser.displayName, concatName(recordUser.first_name, recordUser.last_name), recordUser.full_name, recordUser.name, recordUser.profile?.display_name, recordUser.profile?.name, recordUser.profile?.full_name];
+
+  const directMatch = candidates.find((candidate) => typeof candidate === 'string' && candidate.trim().length > 0);
+  if (directMatch) return directMatch.trim();
+
+  if (typeof recordUser.email === 'string' && recordUser.email.includes('@')) {
+    return recordUser.email.split('@')[0];
+  }
+
+  if (typeof recordUser.username === 'string' && recordUser.username.trim().length > 0) {
+    return recordUser.username.trim();
+  }
+
+  if (typeof record.id === 'string' || typeof record.id === 'number') {
+    return `Guest ${record.id}`;
+  }
+
+  return 'Guest';
+};
+
 export default function AdminRsvpsPage() {
   const { user, userLoading } = useAuth();
   const [rsvps, setRsvps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
 
   const userIsAdmin = isAdmin(user);
 
@@ -29,12 +59,16 @@ export default function AdminRsvpsPage() {
         }
 
         // Fetch all RSVPs
-        const rsvpRes = await fetch('/api/rsvp', { headers });
+        const rsvpRes = await fetch('/api/rsvp', { headers, cache: 'no-store' });
         if (rsvpRes.ok) {
           const rsvpData = await rsvpRes.json();
           // Filter for this party
           const filtered = Array.isArray(rsvpData) ? rsvpData.filter((r) => String(r.party) === String(PARTY_CONFIG.id)) : [];
-          setRsvps(filtered);
+          const normalized = filtered.map((record) => ({
+            ...record,
+            display_name: deriveDisplayName(record),
+          }));
+          setRsvps(normalized);
         }
 
         // Note: Summary can be fetched from backend if needed
@@ -80,6 +114,41 @@ export default function AdminRsvpsPage() {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!id) return;
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('Delete this RSVP? This action cannot be undone.')) return;
+
+    setDeletingId(id);
+    setError('');
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/rsvp/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        let body;
+        try {
+          body = await res.json();
+        } catch (readErr) {
+          body = null;
+        }
+        setError(body?.error || body?.detail || 'Failed to delete RSVP.');
+      } else {
+        setRsvps((prev) => prev.filter((r) => r.id !== id));
+      }
+    } catch (deleteError) {
+      console.error('Error deleting RSVP:', deleteError);
+      setError('Failed to delete RSVP.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (userLoading || loading) {
     return (
       <main className="page">
@@ -119,10 +188,15 @@ export default function AdminRsvpsPage() {
   }
 
   // Calculate summary stats if summary endpoint doesn't exist
-  const yesCount = rsvps.filter((r) => r.status === 'yes').length;
-  const maybeCount = rsvps.filter((r) => r.status === 'maybe').length;
-  const noCount = rsvps.filter((r) => r.status === 'no').length;
-  const totalGuests = rsvps.filter((r) => r.status === 'yes').reduce((sum, r) => sum + (r.guest_count || 1), 0);
+  const normalisedRsvps = rsvps.map((item) => ({
+    ...item,
+    display_name: deriveDisplayName(item),
+  }));
+
+  const yesCount = normalisedRsvps.filter((r) => r.status === 'yes').length;
+  const maybeCount = normalisedRsvps.filter((r) => r.status === 'maybe').length;
+  const noCount = normalisedRsvps.filter((r) => r.status === 'no').length;
+  const totalGuests = normalisedRsvps.filter((r) => r.status === 'yes').reduce((sum, r) => sum + (r.guest_count || 1), 0);
 
   return (
     <main className="page">
@@ -160,14 +234,14 @@ export default function AdminRsvpsPage() {
       {/* RSVP List */}
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h3 style={{ margin: 0 }}>All RSVPs ({rsvps.length})</h3>
+          <h3 style={{ margin: 0 }}>All RSVPs ({normalisedRsvps.length})</h3>
         </div>
 
-        {rsvps.length === 0 ? (
+        {normalisedRsvps.length === 0 ? (
           <p className="muted">No RSVPs yet.</p>
         ) : (
           <div style={{ display: 'grid', gap: 12 }}>
-            {rsvps.map((rsvp) => (
+            {normalisedRsvps.map((rsvp) => (
               <div
                 key={rsvp.id}
                 style={{
@@ -179,7 +253,7 @@ export default function AdminRsvpsPage() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 16, color: '#4338ca', marginBottom: 4 }}>{rsvp.user?.username || rsvp.user?.email || rsvp.user_name || 'Unknown User'}</div>
+                    <div style={{ fontWeight: 600, fontSize: 16, color: '#4338ca', marginBottom: 4 }}>{rsvp.display_name || 'Unknown Guest'}</div>
                     <div
                       style={{
                         display: 'inline-block',
@@ -235,6 +309,24 @@ export default function AdminRsvpsPage() {
                     })}
                   </div>
                 )}
+                <div style={{ marginTop: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(rsvp.id)}
+                    disabled={deletingId === rsvp.id}
+                    style={{
+                      background: deletingId === rsvp.id ? '#d1d5db' : '#ef4444',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: 8,
+                      cursor: deletingId === rsvp.id ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {deletingId === rsvp.id ? 'Deleting...' : 'Delete RSVP'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>

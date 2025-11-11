@@ -9,6 +9,35 @@ import { isAdmin } from '@/utils/admin';
 import { PARTY_CONFIG } from '@/config/party';
 import { getLeaderboard } from '@/utils/gameScores';
 
+const deriveDisplayName = (record) => {
+  if (!record || typeof record !== 'object') return 'Guest';
+  const recordUser = record.user || {};
+
+  const concatName = (first, last) => {
+    const parts = [first, last].filter((part) => typeof part === 'string' && part.trim().length > 0);
+    return parts.length ? parts.join(' ').trim() : null;
+  };
+
+  const candidates = [record.user_name, record.guest_name, record.display_name, record.name, record.guest_display_name, record.guest_full_name, record.user_full_name, record.user_display_name, record.full_name, recordUser.display_name, recordUser.displayName, concatName(recordUser.first_name, recordUser.last_name), recordUser.full_name, recordUser.name, recordUser.profile?.display_name, recordUser.profile?.name, recordUser.profile?.full_name];
+
+  const directMatch = candidates.find((candidate) => typeof candidate === 'string' && candidate.trim().length > 0);
+  if (directMatch) return directMatch.trim();
+
+  if (typeof recordUser.email === 'string' && recordUser.email.includes('@')) {
+    return recordUser.email.split('@')[0];
+  }
+
+  if (typeof recordUser.username === 'string' && recordUser.username.trim().length > 0) {
+    return recordUser.username.trim();
+  }
+
+  if (typeof record.id === 'string' || typeof record.id === 'number') {
+    return `Guest ${record.id}`;
+  }
+
+  return 'Guest';
+};
+
 export default function AdminDashboard() {
   const { user, userLoading } = useAuth();
   const [stats, setStats] = useState({
@@ -23,8 +52,28 @@ export default function AdminDashboard() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   const [deletingMsgId, setDeletingMsgId] = useState(null);
+  const [deletingRsvpId, setDeletingRsvpId] = useState(null);
+  const [rsvpActionError, setRsvpActionError] = useState('');
 
   const userIsAdmin = isAdmin(user);
+
+  const updateRsvpStatsFromList = (list) => {
+    const yes = list.filter((r) => r.status === 'yes').length;
+    const maybe = list.filter((r) => r.status === 'maybe').length;
+    const no = list.filter((r) => r.status === 'no').length;
+    const totalGuests = list.filter((r) => r.status === 'yes').reduce((sum, r) => sum + (r.guest_count || 1), 0);
+
+    setStats((prev) => ({
+      ...prev,
+      rsvps: {
+        total: list.length,
+        yes,
+        maybe,
+        no,
+        totalGuests,
+      },
+    }));
+  };
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -41,29 +90,20 @@ export default function AdminDashboard() {
 
         // Fetch RSVPs with full data
         try {
-          const rsvpRes = await fetch('/api/rsvp', { headers });
+          const rsvpRes = await fetch('/api/rsvp', { headers, cache: 'no-store' });
           if (rsvpRes.ok) {
             const rsvpData = await rsvpRes.json();
             const filtered = Array.isArray(rsvpData) ? rsvpData.filter((r) => String(r.party) === String(PARTY_CONFIG.id)) : [];
-            const yes = filtered.filter((r) => r.status === 'yes').length;
-            const maybe = filtered.filter((r) => r.status === 'maybe').length;
-            const no = filtered.filter((r) => r.status === 'no').length;
-            const totalGuests = filtered.filter((r) => r.status === 'yes').reduce((sum, r) => sum + (r.guest_count || 1), 0);
 
             // Sort by created_at, newest first
             filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-            setRsvps(filtered);
-
-            setStats((prev) => ({
-              ...prev,
-              rsvps: {
-                total: filtered.length,
-                yes,
-                maybe,
-                no,
-                totalGuests,
-              },
+            const normalized = filtered.map((record) => ({
+              ...record,
+              display_name: deriveDisplayName(record),
             }));
+            setRsvps(normalized);
+            updateRsvpStatsFromList(normalized);
+            setRsvpActionError('');
           }
         } catch (e) {
           console.error('Error fetching RSVPs:', e);
@@ -146,6 +186,48 @@ export default function AdminDashboard() {
         return "Sorry, can't make it";
       default:
         return status;
+    }
+  };
+
+  const handleDeleteRsvp = async (rsvpId) => {
+    if (!rsvpId) return;
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('Delete this RSVP? This action cannot be undone.')) {
+      return;
+    }
+
+    setDeletingRsvpId(rsvpId);
+    setRsvpActionError('');
+
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/rsvp/${rsvpId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        let body;
+        try {
+          body = await res.json();
+        } catch (readErr) {
+          body = null;
+        }
+        setRsvpActionError(body?.error || body?.detail || 'Failed to delete RSVP.');
+      } else {
+        setRsvps((prev) => {
+          const updated = prev.filter((r) => r.id !== rsvpId);
+          updateRsvpStatsFromList(updated.map((record) => ({ ...record, display_name: deriveDisplayName(record) })));
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error('Error deleting RSVP:', err);
+      setRsvpActionError('Failed to delete RSVP.');
+    } finally {
+      setDeletingRsvpId(null);
     }
   };
 
@@ -344,6 +426,7 @@ export default function AdminDashboard() {
           </Link>
         </div>
 
+        {rsvpActionError && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: '#b91c1c', padding: 8, borderRadius: 8, marginBottom: 12, fontSize: 13 }}>{rsvpActionError}</div>}
         {rsvps.length === 0 ? (
           <p className="muted">No RSVPs yet.</p>
         ) : (
@@ -360,7 +443,7 @@ export default function AdminDashboard() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 16, color: '#4338ca', marginBottom: 4 }}>{rsvp.user?.username || rsvp.user?.email || rsvp.user_name || 'Unknown User'}</div>
+                    <div style={{ fontWeight: 600, fontSize: 16, color: '#4338ca', marginBottom: 4 }}>{rsvp.display_name || 'Unknown Guest'}</div>
                     <div
                       style={{
                         display: 'inline-block',
@@ -416,6 +499,24 @@ export default function AdminDashboard() {
                     })}
                   </div>
                 )}
+                <div style={{ marginTop: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteRsvp(rsvp.id)}
+                    disabled={deletingRsvpId === rsvp.id}
+                    style={{
+                      background: deletingRsvpId === rsvp.id ? '#d1d5db' : '#ef4444',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: 8,
+                      fontWeight: 600,
+                      cursor: deletingRsvpId === rsvp.id ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {deletingRsvpId === rsvp.id ? 'Deleting…' : 'Delete RSVP'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>

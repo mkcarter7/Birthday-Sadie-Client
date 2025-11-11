@@ -1,6 +1,10 @@
 export async function GET(request) {
   const base = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '';
-  const url = `${base.replace(/\/$/, '')}/api/rsvps/`;
+  const url = new URL(`${base.replace(/\/$/, '')}/api/rsvps/`);
+  const incomingUrl = new URL(request.url);
+  incomingUrl.searchParams.forEach((value, key) => {
+    url.searchParams.set(key, value);
+  });
 
   try {
     // Handle both lowercase and capitalized Authorization header
@@ -11,10 +15,14 @@ export async function GET(request) {
       headers.Authorization = authHeader;
     }
 
-    const res = await fetch(url, {
-      headers,
-      next: { revalidate: 60 },
-    });
+    const fetchOptions = { headers };
+    if (authHeader) {
+      fetchOptions.cache = 'no-store';
+    } else {
+      fetchOptions.next = { revalidate: 60 };
+    }
+
+    const res = await fetch(url.toString(), fetchOptions);
 
     if (!res.ok) {
       // Return empty array for 403 instead of error
