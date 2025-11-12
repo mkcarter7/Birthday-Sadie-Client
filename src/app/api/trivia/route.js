@@ -5,13 +5,14 @@ export async function GET(request) {
   const party = searchParams.get('party');
   const count = searchParams.get('count') || '5';
 
-  let url = `${base.replace(/\/$/, '')}/api/trivia/questions/`;
+  let url = `${base.replace(/\/$/, '')}/api/trivia-questions/`;
   const params = new URLSearchParams();
   if (party) {
     params.append('party', party);
   }
+  params.append('is_active', 'true');
   if (count) {
-    params.append('count', count);
+    params.append('limit', count);
   }
   if (params.toString()) {
     url += `?${params.toString()}`;
@@ -38,6 +39,15 @@ export async function GET(request) {
     }
 
     const data = await res.json();
+    // Normalize response - handle paginated results or direct array
+    if (Array.isArray(data)) {
+      return Response.json(data);
+    }
+    // If paginated, return the results array
+    if (data.results && Array.isArray(data.results)) {
+      return Response.json(data.results);
+    }
+    // Otherwise return as-is
     return Response.json(data);
   } catch (e) {
     return Response.json({ error: 'Trivia service unavailable' }, { status: 502 });

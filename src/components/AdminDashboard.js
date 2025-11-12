@@ -9,6 +9,7 @@ import { isAdmin } from '@/utils/admin';
 import { PARTY_CONFIG } from '@/config/party';
 import { getLeaderboard } from '@/utils/gameScores';
 import TimelineManager from '@/components/TimelineManager';
+import TriviaQuestionManager from '@/components/TriviaQuestionManager';
 import { getPhotoDisplayName, getPhotoOwnerEmail, getPhotoOwnerUid, getPhotoSource } from '@/utils/photos';
 
 const deriveDisplayName = (record) => {
@@ -769,6 +770,8 @@ export default function AdminDashboard() {
       </div>
 
       <TimelineManager cardStyle={{}} />
+
+      <TriviaQuestionManager cardStyle={{}} />
 
       <div className="card" style={{ marginBottom: 16, display: 'grid', gap: 12 }}>
         <h3 style={{ margin: 0 }}>Uploaded Photos ({photos.length})</h3>

@@ -36,18 +36,40 @@ function TriviaGame({ onComplete }) {
         });
 
         if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || 'Failed to load questions');
+          let errorMessage = 'Failed to load questions';
+          try {
+            const text = await res.text();
+            if (text) {
+              try {
+                const errorData = JSON.parse(text);
+                errorMessage = errorData.error || errorData.detail || text;
+              } catch (e) {
+                errorMessage = text;
+              }
+            }
+          } catch (e) {
+            errorMessage = `Failed to load questions (status ${res.status})`;
+          }
+          throw new Error(errorMessage);
         }
 
         const data = await res.json();
-        // Backend returns questions array directly or wrapped in a questions field
+        // Backend returns questions array directly, wrapped in a questions field, or paginated as results
+        let questionsList = [];
         if (Array.isArray(data)) {
-          setQuestions(data);
+          questionsList = data;
+        } else if (data.results && Array.isArray(data.results)) {
+          questionsList = data.results;
         } else if (data.questions && Array.isArray(data.questions)) {
-          setQuestions(data.questions);
+          questionsList = data.questions;
+        } else if (data.data && Array.isArray(data.data)) {
+          questionsList = data.data;
+        }
+
+        if (questionsList.length === 0) {
+          setError('No trivia questions available for this party.');
         } else {
-          throw new Error('Invalid response format');
+          setQuestions(questionsList);
         }
       } catch (err) {
         console.error('Error fetching questions:', err);
