@@ -2,7 +2,12 @@
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '').replace(/\/$/, '');
 
-export async function DELETE(request, { params }) {
+export default async function handler(request, { params }) {
+  const { method } = request;
+  if (method !== 'DELETE') {
+    return new Response(null, { status: 405 });
+  }
+
   const { id } = params || {};
   if (!id) {
     return Response.json({ error: 'Photo id is required' }, { status: 400 });
@@ -34,11 +39,4 @@ export async function DELETE(request, { params }) {
   } catch (err) {
     return Response.json({ error: err.message || 'Photo service unavailable' }, { status: 502 });
   }
-}
-
-export default async function handler(request, context) {
-  if (request.method === 'DELETE') {
-    return DELETE(request, context);
-  }
-  return new Response(null, { status: 405 });
 }
