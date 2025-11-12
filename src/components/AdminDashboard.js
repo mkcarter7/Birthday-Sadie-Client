@@ -40,6 +40,9 @@ const deriveDisplayName = (record) => {
   return 'Guest';
 };
 
+const DELETE_BUTTON_COLOR = '#8b5cf6';
+const DELETE_BUTTON_COLOR_HOVER = '#7c3aed';
+
 export default function AdminDashboard() {
   const { user, userLoading } = useAuth();
   const [stats, setStats] = useState({
@@ -504,7 +507,7 @@ export default function AdminDashboard() {
           </Link>
         </div>
 
-        {rsvpActionError && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: '#b91c1c', padding: 8, borderRadius: 8, marginBottom: 12, fontSize: 13 }}>{rsvpActionError}</div>}
+        {rsvpActionError && <div style={{ background: 'rgba(139,92,246,0.12)', border: `1px solid ${DELETE_BUTTON_COLOR}`, color: '#6b21a8', padding: 8, borderRadius: 8, marginBottom: 12, fontSize: 13 }}>{rsvpActionError}</div>}
         {rsvps.length === 0 ? (
           <p className="muted">No RSVPs yet.</p>
         ) : (
@@ -583,13 +586,20 @@ export default function AdminDashboard() {
                     onClick={() => handleDeleteRsvp(rsvp.id)}
                     disabled={deletingRsvpId === rsvp.id}
                     style={{
-                      background: deletingRsvpId === rsvp.id ? '#d1d5db' : '#ef4444',
-                      color: '#fff',
+                      height: 36,
+                      padding: '0 12px',
                       border: 'none',
-                      padding: '8px 16px',
                       borderRadius: 8,
+                      background: deletingRsvpId === rsvp.id ? '#d1d5db' : DELETE_BUTTON_COLOR,
+                      color: '#fff',
                       fontWeight: 600,
                       cursor: deletingRsvpId === rsvp.id ? 'not-allowed' : 'pointer',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (deletingRsvpId !== rsvp.id) e.currentTarget.style.background = DELETE_BUTTON_COLOR_HOVER;
+                    }}
+                    onMouseLeave={(e) => {
+                      if (deletingRsvpId !== rsvp.id) e.currentTarget.style.background = DELETE_BUTTON_COLOR;
                     }}
                   >
                     {deletingRsvpId === rsvp.id ? 'Deleting…' : 'Delete RSVP'}
@@ -699,8 +709,8 @@ export default function AdminDashboard() {
                       onClick={() => handleDeleteMessage(msg.id)}
                       disabled={deletingMsgId === msg.id}
                       style={{
-                        background: '#ef4444',
-                        border: '1px solid #ef4444',
+                        background: DELETE_BUTTON_COLOR,
+                        border: `1px solid ${DELETE_BUTTON_COLOR}`,
                         color: 'white',
                         cursor: deletingMsgId === msg.id ? 'not-allowed' : 'pointer',
                         fontSize: 12,
@@ -712,12 +722,14 @@ export default function AdminDashboard() {
                       }}
                       onMouseEnter={(e) => {
                         if (deletingMsgId !== msg.id) {
-                          e.target.style.background = '#dc2626';
+                          e.target.style.background = DELETE_BUTTON_COLOR_HOVER;
+                          e.target.style.border = `1px solid ${DELETE_BUTTON_COLOR_HOVER}`;
                           e.target.style.transform = 'scale(1.05)';
                         }
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.background = '#ef4444';
+                        e.target.style.background = DELETE_BUTTON_COLOR;
+                        e.target.style.border = `1px solid ${DELETE_BUTTON_COLOR}`;
                         e.target.style.transform = 'scale(1)';
                       }}
                       title="Delete this message"
@@ -737,8 +749,8 @@ export default function AdminDashboard() {
 
       <div className="card" style={{ marginBottom: 16, display: 'grid', gap: 12 }}>
         <h3 style={{ margin: 0 }}>Uploaded Photos ({photos.length})</h3>
-        {photoActionError && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: '#b91c1c', padding: 8, borderRadius: 8, fontSize: 13 }}>{photoActionError}</div>}
-        {photoSuccessMessage && <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid #10b981', color: '#047857', padding: 8, borderRadius: 8, fontSize: 13 }}>{photoSuccessMessage}</div>}
+        {photoActionError && <div style={{ background: 'rgba(139, 92, 246, 0.12)', border: `1px solid ${DELETE_BUTTON_COLOR}`, color: '#6b21a8', padding: 8, borderRadius: 8, fontSize: 13 }}>{photoActionError}</div>}
+        {photoSuccessMessage && <div style={{ background: 'rgba(139, 92, 246, 0.08)', border: `1px solid ${DELETE_BUTTON_COLOR}`, color: '#4c1d95', padding: 8, borderRadius: 8, fontSize: 13 }}>{photoSuccessMessage}</div>}
         {photos.length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>
             No photos uploaded yet.
@@ -762,7 +774,26 @@ export default function AdminDashboard() {
                   <img src={photo.src} alt={photo.uploader || `Photo ${photo.id}`} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div style={{ fontSize: 12, color: '#6b7280' }}>Uploaded by {photo.uploader || 'Guest'}</div>
-                <button type="button" onClick={() => handleDeletePhoto(photo.id)} disabled={deletingPhotoId === photo.id} className="tile" style={{ height: 36, border: 'none', background: '#ef4444', color: '#fff' }}>
+                <button
+                  type="button"
+                  onClick={() => handleDeletePhoto(photo.id)}
+                  disabled={deletingPhotoId === photo.id}
+                  className="tile"
+                  style={{
+                    height: 36,
+                    border: 'none',
+                    background: deletingPhotoId === photo.id ? '#d1d5db' : DELETE_BUTTON_COLOR,
+                    color: '#fff',
+                    fontWeight: 600,
+                    cursor: deletingPhotoId === photo.id ? 'not-allowed' : 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (deletingPhotoId !== photo.id) e.currentTarget.style.background = DELETE_BUTTON_COLOR_HOVER;
+                  }}
+                  onMouseLeave={(e) => {
+                    if (deletingPhotoId !== photo.id) e.currentTarget.style.background = DELETE_BUTTON_COLOR;
+                  }}
+                >
                   {deletingPhotoId === photo.id ? 'Deleting…' : 'Delete'}
                 </button>
               </div>

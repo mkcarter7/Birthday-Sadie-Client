@@ -32,6 +32,9 @@ const defaultForm = {
   is_active: true,
 };
 
+const DELETE_BUTTON_COLOR = '#8b5cf6';
+const DELETE_BUTTON_COLOR_HOVER = '#7c3aed';
+
 export default function TimelineManager({ cardStyle = {} }) {
   const { user, userLoading } = useAuth();
   const [events, setEvents] = useState([]);
@@ -264,7 +267,29 @@ export default function TimelineManager({ cardStyle = {} }) {
                 <button type="button" onClick={() => handleEdit(event)} className="tile tile-purple" style={{ height: 36, border: 'none', padding: '0 12px' }} disabled={submitting}>
                   Edit
                 </button>
-                <button type="button" onClick={() => handleDelete(event.id)} className="tile" style={{ height: 36, padding: '0 12px', background: '#ef4444', color: '#fff', border: 'none' }} disabled={submitting}>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(event.id)}
+                  className="tile"
+                  style={{
+                    height: 36,
+                    padding: '0 12px',
+                    background: submitting ? '#d1d5db' : DELETE_BUTTON_COLOR,
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    cursor: submitting ? 'not-allowed' : 'pointer',
+                    transition: 'background 0.2s ease',
+                  }}
+                  disabled={submitting}
+                  onMouseEnter={(e) => {
+                    if (!submitting) e.currentTarget.style.background = DELETE_BUTTON_COLOR_HOVER;
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!submitting) e.currentTarget.style.background = DELETE_BUTTON_COLOR;
+                  }}
+                >
                   Delete
                 </button>
               </div>
@@ -297,7 +322,7 @@ export default function TimelineManager({ cardStyle = {} }) {
   return (
     <>
       {error && (
-        <div className="card" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', marginBottom: 16, ...cardStyle }}>
+        <div className="card" style={{ background: 'rgba(139, 92, 246, 0.12)', border: `1px solid ${DELETE_BUTTON_COLOR}`, marginBottom: 16, ...cardStyle }}>
           <p style={{ margin: 0, color: '#b91c1c' }}>{error}</p>
         </div>
       )}

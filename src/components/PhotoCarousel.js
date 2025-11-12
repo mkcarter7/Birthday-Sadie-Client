@@ -76,12 +76,19 @@ function PhotoCard({ photo, index, onImageError, canDelete, onDelete, deleting }
               padding: '6px 10px',
               borderRadius: 9999,
               border: 'none',
-              background: 'rgba(239, 68, 68, 0.9)',
+              background: deleting ? '#d1d5db' : '#8b5cf6',
               color: '#fff',
               fontSize: 12,
               fontWeight: 600,
               cursor: deleting ? 'not-allowed' : 'pointer',
               boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
+              transition: 'background 0.2s ease, transform 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              if (!deleting) e.currentTarget.style.background = '#7c3aed';
+            }}
+            onMouseLeave={(e) => {
+              if (!deleting) e.currentTarget.style.background = '#8b5cf6';
             }}
           >
             {deleting ? 'Removing…' : 'Delete'}
@@ -142,7 +149,7 @@ PhotoCard.defaultProps = {
   deleting: false,
 };
 
-export default function PhotoCarousel() {
+export default function PhotoCarousel({ enableDeletion = false }) {
   const { user, userLoading } = useAuth();
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -164,6 +171,7 @@ export default function PhotoCarousel() {
   };
 
   const handleDeletePhoto = async (photoId) => {
+    if (!enableDeletion) return;
     if (!user) {
       signIn();
       return;
@@ -337,9 +345,9 @@ export default function PhotoCarousel() {
 
   return (
     <div style={{ background: 'transparent', padding: 0 }}>
-      {deleteError && (
-        <div className="card" style={{ margin: '0 16px 16px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444' }}>
-          <p style={{ margin: 0, color: '#b91c1c' }}>{deleteError}</p>
+      {enableDeletion && deleteError && (
+        <div className="card" style={{ margin: '0 16px 16px', background: 'rgba(139, 92, 246, 0.12)', border: '1px solid #8b5cf6' }}>
+          <p style={{ margin: 0, color: '#4c1d95' }}>{deleteError}</p>
         </div>
       )}
       <div style={{ position: 'relative', padding: '0 16px', overflow: 'hidden' }}>
@@ -420,10 +428,18 @@ export default function PhotoCarousel() {
           {photos.map((photo, i) => {
             const photoId = photo.id;
             if (hiddenIds.has(photoId)) return null;
-            return <PhotoCard key={photoId} photo={photo} index={i} onImageError={handleImageError} canDelete={userIsAdmin || photoBelongsToUser(photo, user)} onDelete={handleDeletePhoto} deleting={deletingPhotoId === photoId} />;
+            return <PhotoCard key={photoId} photo={photo} index={i} onImageError={handleImageError} canDelete={enableDeletion && (userIsAdmin || photoBelongsToUser(photo, user))} onDelete={handleDeletePhoto} deleting={deletingPhotoId === photoId} />;
           })}
         </div>
       </div>
     </div>
   );
 }
+
+PhotoCarousel.propTypes = {
+  enableDeletion: PropTypes.bool,
+};
+
+PhotoCarousel.defaultProps = {
+  enableDeletion: false,
+};

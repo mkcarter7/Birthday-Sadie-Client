@@ -272,25 +272,21 @@ export default function RsvpPage() {
       <PageHeader title="RSVP for Party" subtitle="Let us know if you can make it" />
 
       {error && (
-        <div className="card" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', marginBottom: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-            <p style={{ color: '#ef4444', margin: 0, fontSize: 14, flex: 1 }}>{error}</p>
+        <div className="card" style={{ background: 'rgba(139, 92, 246, 0.12)', border: '1px solid #8b5cf6', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <p style={{ color: '#4c1d95', margin: 0, fontSize: 14, flex: 1 }}>{error}</p>
             <button
               type="button"
               onClick={() => setError('')}
               style={{
                 background: 'transparent',
-                color: '#ef4444',
-                border: '1px solid #ef4444',
-                padding: '6px 12px',
-                borderRadius: 6,
-                fontSize: 12,
+                border: 'none',
+                color: '#4c1d95',
                 cursor: 'pointer',
-                fontWeight: 500,
+                fontWeight: 600,
               }}
-              aria-label="Dismiss error"
             >
-              ×
+              Dismiss
             </button>
           </div>
         </div>
@@ -323,7 +319,7 @@ export default function RsvpPage() {
                 onClick={handleDelete}
                 disabled={deleting}
                 style={{
-                  background: deleting ? '#d1d5db' : '#ef4444',
+                  background: deleting ? '#d1d5db' : '#8b5cf6',
                   color: 'white',
                   border: 'none',
                   padding: '8px 16px',

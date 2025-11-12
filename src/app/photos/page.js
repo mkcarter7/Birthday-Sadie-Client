@@ -145,7 +145,7 @@ export default function PhotosPage() {
   return (
     <main className="page">
       <PageHeader title="Party Photos" subtitle="Upload and browse shared memories" />
-      <PhotoCarousel />
+      <PhotoCarousel enableDeletion />
 
       <div className="card" style={{ display: 'grid', gap: 12 }}>
         <h3>Upload a Photo</h3>

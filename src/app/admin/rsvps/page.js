@@ -36,6 +36,9 @@ const deriveDisplayName = (record) => {
   return 'Guest';
 };
 
+const DELETE_BUTTON_COLOR = '#8b5cf6';
+const DELETE_BUTTON_COLOR_HOVER = '#7c3aed';
+
 export default function AdminRsvpsPage() {
   const { user, userLoading } = useAuth();
   const [rsvps, setRsvps] = useState([]);
@@ -203,8 +206,8 @@ export default function AdminRsvpsPage() {
       <PageHeader title="RSVP Admin" subtitle="View all RSVPs for the party" />
 
       {error && (
-        <div className="card" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', marginBottom: 16 }}>
-          <p style={{ color: '#ef4444', margin: 0, fontSize: 14 }}>{error}</p>
+        <div className="card" style={{ background: 'rgba(139, 92, 246, 0.12)', border: `1px solid ${DELETE_BUTTON_COLOR}`, marginBottom: 16 }}>
+          <p style={{ color: '#4c1d95', margin: 0, fontSize: 14 }}>{error}</p>
         </div>
       )}
 
@@ -315,16 +318,24 @@ export default function AdminRsvpsPage() {
                     onClick={() => handleDelete(rsvp.id)}
                     disabled={deletingId === rsvp.id}
                     style={{
-                      background: deletingId === rsvp.id ? '#d1d5db' : '#ef4444',
-                      color: 'white',
-                      border: 'none',
-                      padding: '8px 16px',
+                      height: 36,
+                      padding: '0 12px',
                       borderRadius: 8,
-                      cursor: deletingId === rsvp.id ? 'not-allowed' : 'pointer',
+                      border: 'none',
+                      background: deletingId === rsvp.id ? '#d1d5db' : DELETE_BUTTON_COLOR,
+                      color: '#fff',
                       fontWeight: 600,
+                      cursor: deletingId === rsvp.id ? 'not-allowed' : 'pointer',
+                      transition: 'background 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (deletingId !== rsvp.id) e.currentTarget.style.background = DELETE_BUTTON_COLOR_HOVER;
+                    }}
+                    onMouseLeave={(e) => {
+                      if (deletingId !== rsvp.id) e.currentTarget.style.background = DELETE_BUTTON_COLOR;
                     }}
                   >
-                    {deletingId === rsvp.id ? 'Deleting...' : 'Delete RSVP'}
+                    {deletingId === rsvp.id ? 'Deleting…' : 'Delete'}
                   </button>
                 </div>
               </div>

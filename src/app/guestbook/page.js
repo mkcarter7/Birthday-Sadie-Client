@@ -480,28 +480,22 @@ export default function GuestbookPage() {
       <PageHeader title="Guest Book" subtitle="Leave a sweet message for Sadie" />
 
       {error && (
-        <div className="card" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', marginBottom: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-            <p style={{ color: '#ef4444', margin: 0, fontSize: 14, flex: 1 }}>{error}</p>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button
-                type="button"
-                onClick={() => setError('')}
-                style={{
-                  background: 'transparent',
-                  color: '#ef4444',
-                  border: '1px solid #ef4444',
-                  padding: '6px 12px',
-                  borderRadius: 6,
-                  fontSize: 12,
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                }}
-                aria-label="Dismiss error"
-              >
-                ×
-              </button>
-            </div>
+        <div className="card" style={{ background: 'rgba(139, 92, 246, 0.12)', border: '1px solid #8b5cf6', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <p style={{ color: '#4c1d95', margin: 0, fontSize: 14, flex: 1 }}>{error}</p>
+            <button
+              type="button"
+              onClick={() => setError('')}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#4c1d95',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Dismiss
+            </button>
           </div>
         </div>
       )}
