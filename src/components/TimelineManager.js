@@ -149,7 +149,14 @@ export default function TimelineManager({ cardStyle = {} }) {
       const endpoint = form.id ? `/api/timeline-events/${form.id}` : `/api/timeline-events`;
       const res = await fetch(endpoint, requestOptions);
       const text = await res.text();
-      const responseBody = text ? JSON.parse(text).catch(() => text) : null;
+      let responseBody = null;
+      if (text) {
+        try {
+          responseBody = JSON.parse(text);
+        } catch (e) {
+          responseBody = text;
+        }
+      }
 
       if (!res.ok) {
         const message = typeof responseBody === 'string' ? responseBody : responseBody?.error || responseBody?.detail || 'Failed to save event';

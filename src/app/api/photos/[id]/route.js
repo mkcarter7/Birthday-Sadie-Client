@@ -1,5 +1,6 @@
 'use server';
 
+/* eslint-disable import/prefer-default-export */
 import { PARTY_CONFIG } from '@/config/party';
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '').replace(/\/$/, '');
@@ -60,13 +61,7 @@ const decodeAuthHeader = (authHeader) => {
   }
 };
 
-export default async function handler(request, context) {
-  const { method } = request;
-  if (method !== 'DELETE') {
-    return new Response(null, { status: 405 });
-  }
-
-  const { params } = context || {};
+export async function DELETE(request, { params }) {
   const { id } = params || {};
   if (!id) {
     return Response.json({ error: 'Photo id is required' }, { status: 400 });

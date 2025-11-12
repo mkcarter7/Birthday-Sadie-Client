@@ -367,13 +367,30 @@ export default function AdminDashboard() {
       });
 
       if (!res.ok) {
-        let detail = null;
+        let errorMessage = 'Failed to delete photo';
         try {
-          detail = await res.text();
+          const text = await res.text();
+          if (text) {
+            try {
+              const json = JSON.parse(text);
+              errorMessage = json.error || json.detail || json.message || text;
+              // Handle nested JSON strings
+              if (typeof errorMessage === 'string' && errorMessage.startsWith('{')) {
+                try {
+                  const nested = JSON.parse(errorMessage);
+                  errorMessage = nested.detail || nested.error || errorMessage;
+                } catch (e) {
+                  // Keep original if nested parse fails
+                }
+              }
+            } catch (e) {
+              errorMessage = text;
+            }
+          }
         } catch (error) {
-          detail = null;
+          errorMessage = `Failed to delete photo (status ${res.status})`;
         }
-        throw new Error(detail || 'Failed to delete photo');
+        throw new Error(errorMessage);
       }
 
       setPhotos((prev) => prev.filter((p) => p.id !== photoId));

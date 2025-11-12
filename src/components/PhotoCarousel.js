@@ -203,13 +203,30 @@ export default function PhotoCarousel({ enableDeletion = false }) {
       });
 
       if (!res.ok) {
-        let text;
+        let errorMessage = 'Failed to delete photo';
         try {
-          text = await res.text();
-        } catch (e) {
-          text = null;
+          const text = await res.text();
+          if (text) {
+            try {
+              const json = JSON.parse(text);
+              errorMessage = json.error || json.detail || json.message || text;
+              // Handle nested JSON strings
+              if (typeof errorMessage === 'string' && errorMessage.startsWith('{')) {
+                try {
+                  const nested = JSON.parse(errorMessage);
+                  errorMessage = nested.detail || nested.error || errorMessage;
+                } catch (e) {
+                  // Keep original if nested parse fails
+                }
+              }
+            } catch (e) {
+              errorMessage = text;
+            }
+          }
+        } catch (error) {
+          errorMessage = `Failed to delete photo (status ${res.status})`;
         }
-        throw new Error(text || 'Failed to delete photo');
+        throw new Error(errorMessage);
       }
 
       setPhotos((prev) => prev.filter((p) => p.id !== photoId));
