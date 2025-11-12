@@ -67,7 +67,7 @@ function PhotoCard({ photo, index, onImageError, canDelete, onDelete, deleting }
         {canDelete && (
           <button
             type="button"
-            onClick={() => onDelete(photoId)}
+            onClick={() => onDelete(photo)}
             disabled={deleting}
             style={{
               position: 'absolute',
@@ -170,13 +170,21 @@ export default function PhotoCarousel({ enableDeletion = false }) {
     });
   };
 
-  const handleDeletePhoto = async (photoId) => {
+  const handleDeletePhoto = async (photo) => {
     if (!enableDeletion) return;
+    const photoId = photo?.id;
+    if (!photoId) {
+      setDeleteError('Photo id is missing.');
+      return;
+    }
     if (!user) {
       signIn();
       return;
     }
-    if (!photoId) return;
+    if (!userIsAdmin && !photoBelongsToUser(photo, user)) {
+      setDeleteError('You can only delete photos you uploaded.');
+      return;
+    }
     if (typeof window !== 'undefined' && !window.confirm('Are you sure you want to delete this photo?')) {
       return;
     }
@@ -195,7 +203,12 @@ export default function PhotoCarousel({ enableDeletion = false }) {
       });
 
       if (!res.ok) {
-        const text = await res.text();
+        let text;
+        try {
+          text = await res.text();
+        } catch (e) {
+          text = null;
+        }
         throw new Error(text || 'Failed to delete photo');
       }
 

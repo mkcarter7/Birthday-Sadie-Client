@@ -290,7 +290,7 @@ export default function Home() {
         const params = new URLSearchParams({
           latitude: partyLatitude,
           longitude: partyLongitude,
-          daily: 'weathercode,temperature_2m_max,temperature_2m_min',
+          daily: 'weathercode,temperature_2m_mean',
           timezone: 'auto',
           temperature_unit: 'fahrenheit',
           start_date: targetDate,
@@ -315,17 +315,9 @@ export default function Home() {
         } else {
           const code = daily.weathercode[0];
           const desc = WEATHER_CODES[code] || 'Great celebration weather';
-          const high = Number.isFinite(daily.temperature_2m_max?.[0]) ? Math.round(daily.temperature_2m_max[0]) : null;
-          const low = Number.isFinite(daily.temperature_2m_min?.[0]) ? Math.round(daily.temperature_2m_min[0]) : null;
+          const meanTemp = Number.isFinite(daily.temperature_2m_mean?.[0]) ? Math.round(daily.temperature_2m_mean[0]) : null;
 
-          let tempDisplay = '—';
-          if (high !== null && low !== null) {
-            tempDisplay = `High ${high}° · Low ${low}°F`;
-          } else if (high !== null) {
-            tempDisplay = `${high}°F`;
-          } else if (low !== null) {
-            tempDisplay = `${low}°F`;
-          }
+          const tempDisplay = meanTemp !== null ? `${meanTemp}°F` : '—';
 
           const icon = getWeatherIcon(desc);
 
@@ -394,7 +386,7 @@ export default function Home() {
       <section className="countdown-weather-container">
         <div className="countdown card" style={{ textAlign: 'center' }}>
           <h2>Party Countdown</h2>
-          <div className="countdown-body" style={{ color: PARTY_CONFIG.secondaryColor || '#8B5CF6' }}>
+          <div className="countdown-body" style={{ color: PARTY_CONFIG.primaryColor || '#3B82F6' }}>
             {countdown.headline}
           </div>
           <p className="muted">{countdown.subline}</p>

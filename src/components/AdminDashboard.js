@@ -339,18 +339,26 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDeletePhoto = async (photoId) => {
-    if (!photoId) return;
-    // eslint-disable-next-line no-alert
-    if (typeof window !== 'undefined' && !window.confirm('Delete this photo? This action cannot be undone.')) {
+  const handleDeletePhoto = async (photo) => {
+    if (!user) {
+      signIn();
+      return;
+    }
+
+    const photoId = photo?.id;
+    if (!photoId) {
+      setPhotoActionError('Photo id is missing.');
       return;
     }
 
     setPhotoActionError('');
     setPhotoSuccessMessage('');
     setDeletingPhotoId(photoId);
+
     try {
       const token = await user.getIdToken();
+      if (!token) throw new Error('Could not authenticate your request.');
+
       const res = await fetch(`/api/photos/${photoId}`, {
         method: 'DELETE',
         headers: {
@@ -359,21 +367,19 @@ export default function AdminDashboard() {
       });
 
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || 'Failed to delete photo');
+        let detail = null;
+        try {
+          detail = await res.text();
+        } catch (error) {
+          detail = null;
+        }
+        throw new Error(detail || 'Failed to delete photo');
       }
 
-      setPhotos((prev) => {
-        const updated = prev.filter((photo) => photo.id !== photoId);
-        setStats((statsPrev) => ({
-          ...statsPrev,
-          photos: { total: updated.length },
-        }));
-        return updated;
-      });
-      setPhotoSuccessMessage('Photo deleted.');
-    } catch (err) {
-      setPhotoActionError(err.message || 'Unable to delete photo');
+      setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+      setPhotoSuccessMessage('Photo deleted successfully');
+    } catch (error) {
+      setPhotoActionError(error.message || 'Unable to delete photo');
     } finally {
       setDeletingPhotoId(null);
     }
@@ -776,7 +782,7 @@ export default function AdminDashboard() {
                 <div style={{ fontSize: 12, color: '#6b7280' }}>Uploaded by {photo.uploader || 'Guest'}</div>
                 <button
                   type="button"
-                  onClick={() => handleDeletePhoto(photo.id)}
+                  onClick={() => handleDeletePhoto(photo)}
                   disabled={deletingPhotoId === photo.id}
                   className="tile"
                   style={{
