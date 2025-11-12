@@ -1,11 +1,13 @@
 'use client';
 
 import PropTypes from 'prop-types';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useAuth } from '@/utils/context/authContext';
 import { signIn } from '@/utils/auth';
+import { isAdmin } from '@/utils/admin';
+import { photoBelongsToUser } from '@/utils/photos';
 
-function PhotoCard({ photo, index, onImageError }) {
+function PhotoCard({ photo, index, onImageError, canDelete, onDelete, deleting }) {
   const [aspectRatio, setAspectRatio] = useState(null);
 
   const src = photo.image || photo.url;
@@ -62,6 +64,29 @@ function PhotoCard({ photo, index, onImageError }) {
             display: 'block',
           }}
         />
+        {canDelete && (
+          <button
+            type="button"
+            onClick={() => onDelete(photoId)}
+            disabled={deleting}
+            style={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              padding: '6px 10px',
+              borderRadius: 9999,
+              border: 'none',
+              background: 'rgba(239, 68, 68, 0.9)',
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: deleting ? 'not-allowed' : 'pointer',
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            {deleting ? 'Removing…' : 'Delete'}
+          </button>
+        )}
         {uploader && (
           <div
             style={{
@@ -99,21 +124,36 @@ PhotoCard.propTypes = {
     uploaded_by: PropTypes.shape({
       full_name: PropTypes.string,
       username: PropTypes.string,
+      email: PropTypes.string,
+      firebase_uid: PropTypes.string,
+      uid: PropTypes.string,
     }),
   }).isRequired,
   index: PropTypes.number.isRequired,
   onImageError: PropTypes.func.isRequired,
+  canDelete: PropTypes.bool,
+  onDelete: PropTypes.func,
+  deleting: PropTypes.bool,
+};
+
+PhotoCard.defaultProps = {
+  canDelete: false,
+  onDelete: () => {},
+  deleting: false,
 };
 
 export default function PhotoCarousel() {
   const { user, userLoading } = useAuth();
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
-  // Likes disabled
   const [hiddenIds, setHiddenIds] = useState(new Set());
+  const [deleteError, setDeleteError] = useState('');
+  const [deletingPhotoId, setDeletingPhotoId] = useState(null);
   const scrollContainerRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const userIsAdmin = useMemo(() => isAdmin(user), [user]);
 
   const handleImageError = (photoId) => {
     setHiddenIds((prev) => {
@@ -121,6 +161,42 @@ export default function PhotoCarousel() {
       next.add(photoId);
       return next;
     });
+  };
+
+  const handleDeletePhoto = async (photoId) => {
+    if (!user) {
+      signIn();
+      return;
+    }
+    if (!photoId) return;
+    if (typeof window !== 'undefined' && !window.confirm('Are you sure you want to delete this photo?')) {
+      return;
+    }
+
+    setDeleteError('');
+    setDeletingPhotoId(photoId);
+    try {
+      const token = await user.getIdToken();
+      if (!token) throw new Error('Could not authenticate your request.');
+
+      const res = await fetch(`/api/photos/${photoId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Failed to delete photo');
+      }
+
+      setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+    } catch (err) {
+      setDeleteError(err.message || 'Unable to delete photo');
+    } finally {
+      setDeletingPhotoId(null);
+    }
   };
 
   // Likes disabled – no handler
@@ -140,14 +216,8 @@ export default function PhotoCarousel() {
         const res = await fetch('/api/photos');
         if (res.ok) {
           const data = await res.json();
-          const list = Array.isArray(data) ? data : data?.photos || [];
-          const filtered = list.filter((p) => {
-            if (!p) return false;
-            if (p.deleted === true || p.is_deleted === true) return false;
-            const src = p.image || p.url;
-            return typeof src === 'string' && src.length > 0;
-          });
-          if (isMounted) setPhotos(filtered);
+          const list = Array.isArray(data) ? data : data?.photos || data?.results || [];
+          if (isMounted) setPhotos(list);
         }
       } catch (e) {
         // ignore; show empty state
@@ -267,6 +337,11 @@ export default function PhotoCarousel() {
 
   return (
     <div style={{ background: 'transparent', padding: 0 }}>
+      {deleteError && (
+        <div className="card" style={{ margin: '0 16px 16px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444' }}>
+          <p style={{ margin: 0, color: '#b91c1c' }}>{deleteError}</p>
+        </div>
+      )}
       <div style={{ position: 'relative', padding: '0 16px', overflow: 'hidden' }}>
         {/* Left Arrow */}
         {canScrollLeft && (
@@ -345,7 +420,7 @@ export default function PhotoCarousel() {
           {photos.map((photo, i) => {
             const photoId = photo.id;
             if (hiddenIds.has(photoId)) return null;
-            return <PhotoCard key={photoId} photo={photo} index={i} onImageError={handleImageError} />;
+            return <PhotoCard key={photoId} photo={photo} index={i} onImageError={handleImageError} canDelete={userIsAdmin || photoBelongsToUser(photo, user)} onDelete={handleDeletePhoto} deleting={deletingPhotoId === photoId} />;
           })}
         </div>
       </div>

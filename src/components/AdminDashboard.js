@@ -9,6 +9,7 @@ import { isAdmin } from '@/utils/admin';
 import { PARTY_CONFIG } from '@/config/party';
 import { getLeaderboard } from '@/utils/gameScores';
 import TimelineManager from '@/components/TimelineManager';
+import { getPhotoDisplayName, getPhotoOwnerEmail, getPhotoOwnerUid, getPhotoSource } from '@/utils/photos';
 
 const deriveDisplayName = (record) => {
   if (!record || typeof record !== 'object') return 'Guest';
@@ -51,10 +52,14 @@ export default function AdminDashboard() {
   const [rsvps, setRsvps] = useState([]);
   const [messages, setMessages] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [photos, setPhotos] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   const [deletingMsgId, setDeletingMsgId] = useState(null);
   const [deletingRsvpId, setDeletingRsvpId] = useState(null);
+  const [deletingPhotoId, setDeletingPhotoId] = useState(null);
   const [rsvpActionError, setRsvpActionError] = useState('');
+  const [photoActionError, setPhotoActionError] = useState('');
+  const [photoSuccessMessage, setPhotoSuccessMessage] = useState('');
 
   const userIsAdmin = isAdmin(user);
 
@@ -82,6 +87,8 @@ export default function AdminDashboard() {
 
       try {
         const headers = {};
+        setPhotoActionError('');
+        setPhotoSuccessMessage('');
         try {
           const token = await user.getIdToken();
           headers.Authorization = `Bearer ${token}`;
@@ -128,6 +135,32 @@ export default function AdminDashboard() {
           }
         } catch (e) {
           console.error('Error fetching guestbook:', e);
+        }
+
+        // Fetch Photos
+        try {
+          const photosRes = await fetch('/api/photos', { headers, cache: 'no-store' });
+          if (photosRes.ok) {
+            const photosData = await photosRes.json();
+            const list = Array.isArray(photosData) ? photosData : photosData?.photos || photosData?.results || [];
+            const normalizedPhotos = list
+              .map((photo) => ({
+                id: photo.id,
+                src: getPhotoSource(photo),
+                uploader: getPhotoDisplayName(photo),
+                ownerUid: getPhotoOwnerUid(photo),
+                ownerEmail: getPhotoOwnerEmail(photo),
+              }))
+              .filter((photo) => photo.src)
+              .sort((a, b) => String(b.id).localeCompare(String(a.id)));
+            setPhotos(normalizedPhotos);
+            setStats((prev) => ({
+              ...prev,
+              photos: { total: normalizedPhotos.length },
+            }));
+          }
+        } catch (e) {
+          console.error('Error fetching photos:', e);
         }
 
         // Fetch Game Leaderboard and Stats
@@ -303,6 +336,46 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeletePhoto = async (photoId) => {
+    if (!photoId) return;
+    // eslint-disable-next-line no-alert
+    if (typeof window !== 'undefined' && !window.confirm('Delete this photo? This action cannot be undone.')) {
+      return;
+    }
+
+    setPhotoActionError('');
+    setPhotoSuccessMessage('');
+    setDeletingPhotoId(photoId);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/photos/${photoId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Failed to delete photo');
+      }
+
+      setPhotos((prev) => {
+        const updated = prev.filter((photo) => photo.id !== photoId);
+        setStats((statsPrev) => ({
+          ...statsPrev,
+          photos: { total: updated.length },
+        }));
+        return updated;
+      });
+      setPhotoSuccessMessage('Photo deleted.');
+    } catch (err) {
+      setPhotoActionError(err.message || 'Unable to delete photo');
+    } finally {
+      setDeletingPhotoId(null);
+    }
+  };
+
   // Helper function to get author name from message
   const getAuthorName = (msg) => {
     if (msg.name && msg.name.trim()) return msg.name.trim();
@@ -375,6 +448,10 @@ export default function AdminDashboard() {
           <div style={{ textAlign: 'center', padding: 16, background: 'rgba(16, 185, 129, 0.1)', borderRadius: 8 }}>
             <div style={{ fontSize: 32, fontWeight: 700, color: '#10b981' }}>{stats.rsvps.totalGuests}</div>
             <div style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>Total Guests</div>
+          </div>
+          <div style={{ textAlign: 'center', padding: 16, background: 'rgba(34, 197, 94, 0.1)', borderRadius: 8 }}>
+            <div style={{ fontSize: 32, fontWeight: 700, color: '#22c55e' }}>{stats.photos.total}</div>
+            <div style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>Uploaded Photos</div>
           </div>
           <div style={{ textAlign: 'center', padding: 16, background: 'rgba(59, 130, 246, 0.1)', borderRadius: 8 }}>
             <div style={{ fontSize: 32, fontWeight: 700, color: '#3b82f6' }}>{stats.guestbook.total}</div>
@@ -657,6 +734,42 @@ export default function AdminDashboard() {
       </div>
 
       <TimelineManager cardStyle={{}} />
+
+      <div className="card" style={{ marginBottom: 16, display: 'grid', gap: 12 }}>
+        <h3 style={{ margin: 0 }}>Uploaded Photos ({photos.length})</h3>
+        {photoActionError && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: '#b91c1c', padding: 8, borderRadius: 8, fontSize: 13 }}>{photoActionError}</div>}
+        {photoSuccessMessage && <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid #10b981', color: '#047857', padding: 8, borderRadius: 8, fontSize: 13 }}>{photoSuccessMessage}</div>}
+        {photos.length === 0 ? (
+          <p className="muted" style={{ margin: 0 }}>
+            No photos uploaded yet.
+          </p>
+        ) : (
+          <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+            {photos.map((photo) => (
+              <div
+                key={photo.id}
+                style={{
+                  padding: 12,
+                  display: 'grid',
+                  gap: 8,
+                  borderRadius: 12,
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
+                  background: 'rgba(255, 255, 255, 0.6)',
+                }}
+              >
+                <div style={{ position: 'relative', width: '100%', paddingBottom: '75%', overflow: 'hidden', borderRadius: 8, background: '#f3f4f6' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={photo.src} alt={photo.uploader || `Photo ${photo.id}`} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>Uploaded by {photo.uploader || 'Guest'}</div>
+                <button type="button" onClick={() => handleDeletePhoto(photo.id)} disabled={deletingPhotoId === photo.id} className="tile" style={{ height: 36, border: 'none', background: '#ef4444', color: '#fff' }}>
+                  {deletingPhotoId === photo.id ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </main>
   );
 }
