@@ -8,7 +8,7 @@ const event = {
   title: PARTY_CONFIG.name,
   date: PARTY_CONFIG.date,
   time: PARTY_CONFIG.time,
-  url: typeof window === 'undefined' ? 'https://example.com' : window.location.origin,
+  url: 'https://birthday-sadie-client.vercel.app/',
 };
 
 function normalizePhone(input) {
