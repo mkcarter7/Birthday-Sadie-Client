@@ -16,12 +16,13 @@ function Signin() {
       <h1
         style={{
           fontSize: '48px',
-          fontWeight: 600,
+          fontWeight: 700,
           marginBottom: '30px',
-          color: 'var(--party-primary)',
+          color: '#3B82F6',
           fontFamily: 'var(--font-fredoka), "Fredoka", sans-serif',
-          letterSpacing: '1px',
-          textShadow: '2px 2px 6px rgba(0, 0, 0, 0.18)',
+          letterSpacing: '-0.02em',
+          lineHeight: '1.2',
+          textShadow: '0 2px 12px rgba(59, 130, 246, 0.5), 0 4px 24px rgba(59, 130, 246, 0.3), 0 1px 2px rgba(59, 130, 246, 0.35)',
         }}
       >
         HAPPY BIRTHDAY SADIE
@@ -33,18 +34,18 @@ function Signin() {
         className="copy-btn"
         onClick={signIn}
         style={{
-          backgroundColor: 'var(--party-primary)',
-          borderColor: 'var(--party-primary)',
+          backgroundColor: '#14B8A6',
+          borderColor: '#14B8A6',
           color: '#fff',
           transition: 'var(--party-transition)',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'var(--party-secondary)';
-          e.currentTarget.style.borderColor = 'var(--party-secondary)';
+          e.currentTarget.style.backgroundColor = '#0D9488';
+          e.currentTarget.style.borderColor = '#0D9488';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'var(--party-primary)';
-          e.currentTarget.style.borderColor = 'var(--party-primary)';
+          e.currentTarget.style.backgroundColor = '#14B8A6';
+          e.currentTarget.style.borderColor = '#14B8A6';
         }}
       >
         Sign In
