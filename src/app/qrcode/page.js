@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import PageHeader from '@/components/PageHeader';
 
 const PARTY_URL = 'https://birthday-sadie-client.vercel.app/';
@@ -26,9 +27,12 @@ export default function QrPage() {
       <PageHeader title="QR Code" subtitle="Share the party website with a QR code" />
       <div className="card" style={{ display: 'grid', gap: 16, textAlign: 'center' }}>
         <div>
-          <img
+          <Image
             src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(PARTY_URL)}`}
             alt="Party QR Code"
+            width={300}
+            height={300}
+            unoptimized
             style={{
               width: '100%',
               maxWidth: '300px',

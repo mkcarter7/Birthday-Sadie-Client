@@ -47,7 +47,21 @@ export async function POST(request) {
 
     if (!res.ok) {
       const errorText = await res.text();
-      return Response.json({ error: `Upload failed: ${res.status} ${errorText}` }, { status: res.status });
+      console.error('Photo upload failed:', {
+        status: res.status,
+        url,
+        errorText: errorText.substring(0, 200), // First 200 chars
+      });
+      // If response is HTML, it's likely a 404 or error page
+      if (errorText.trim().startsWith('<!DOCTYPE') || errorText.trim().startsWith('<html')) {
+        return Response.json(
+          {
+            error: `Upload failed: Backend returned HTML error page. Check that the endpoint ${url} exists on your backend.`,
+          },
+          { status: res.status },
+        );
+      }
+      return Response.json({ error: `Upload failed: ${res.status} ${errorText.substring(0, 100)}` }, { status: res.status });
     }
 
     const data = await res.json();
