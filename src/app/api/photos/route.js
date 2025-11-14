@@ -22,6 +22,11 @@ export async function GET() {
 
 export async function POST(request) {
   const base = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '';
+
+  if (!base) {
+    return Response.json({ error: 'API base URL is not configured. Please set NEXT_PUBLIC_API_URL in Vercel environment variables.' }, { status: 500 });
+  }
+
   const url = `${base.replace(/\/$/, '')}/api/photos/`;
 
   try {
@@ -49,6 +54,7 @@ export async function POST(request) {
     return Response.json(data);
   } catch (e) {
     console.error('Upload error:', e);
-    return Response.json({ error: `Upload service unavailable: ${e.message}` }, { status: 502 });
+    console.error('Attempted URL:', url);
+    return Response.json({ error: `Upload service unavailable: ${e.message}. Check that NEXT_PUBLIC_API_URL is set correctly in Vercel.` }, { status: 502 });
   }
 }

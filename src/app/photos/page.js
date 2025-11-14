@@ -82,14 +82,8 @@ export default function PhotosPage() {
     try {
       const token = await user.getIdToken(true);
 
-      const baseApi = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
-      const uploadUrl = `${baseApi}/api/photos/`;
-
-      if (!baseApi) {
-        throw new Error('API base URL is not configured.');
-      }
-
-      const res = await fetch(uploadUrl, {
+      // Use Next.js API route instead of calling backend directly
+      const res = await fetch('/api/photos', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
