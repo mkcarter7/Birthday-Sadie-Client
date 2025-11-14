@@ -31,12 +31,29 @@ export async function POST(request) {
 
   try {
     const formData = await request.formData();
-    const authHeader = request.headers.get('authorization');
+    // Handle both lowercase and capitalized Authorization header
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
 
-    const headers = {};
-    if (authHeader) {
-      headers.Authorization = authHeader;
+    if (!authHeader) {
+      console.error('Photo upload - No authorization header provided');
+      return Response.json(
+        {
+          error: 'Authentication required',
+          details: 'No authorization header provided',
+        },
+        { status: 401 },
+      );
     }
+
+    const headers = {
+      Authorization: authHeader,
+    };
+
+    console.log('Photo upload - Forwarding request to backend:', {
+      url,
+      hasAuthHeader: !!authHeader,
+      authHeaderPrefix: authHeader.substring(0, 20),
+    });
 
     const res = await fetch(url, {
       method: 'POST',
