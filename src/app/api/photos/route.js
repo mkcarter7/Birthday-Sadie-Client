@@ -48,15 +48,14 @@ export async function POST(request) {
   const url = `${base.replace(/\/$/, '')}/api/photos/`;
 
   try {
-    const formData = await request.formData();
-    // Handle both lowercase and capitalized Authorization header
+    // Get auth header BEFORE consuming the body
     const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
 
     if (!authHeader) {
       console.error('Photo upload - No authorization header provided');
       console.error(
         'Available headers:',
-        Array.from(request.headers.entries()).map(([k]) => k),
+        Array.from(request.headers.entries()).map(([k, v]) => `${k}: ${k === 'authorization' || k === 'Authorization' ? '[REDACTED]' : v.substring(0, 50)}`),
       );
       return Response.json(
         {
@@ -67,23 +66,44 @@ export async function POST(request) {
       );
     }
 
-    // Ensure the header is properly formatted
+    // Ensure the header is properly formatted with Bearer prefix
+    const formattedAuthHeader = authHeader.startsWith('Bearer ') ? authHeader : `Bearer ${authHeader.replace(/^Bearer\s+/i, '')}`;
+
+    // Now consume the form data
+    const formData = await request.formData();
+
+    // Build headers object - explicitly set Authorization
+    // Note: When using FormData, we must NOT set Content-Type - fetch will set it with boundary
+    // But we MUST include Authorization header
     const headers = {
-      Authorization: authHeader.startsWith('Bearer ') ? authHeader : `Bearer ${authHeader.replace(/^Bearer\s+/i, '')}`,
+      Authorization: formattedAuthHeader,
     };
 
     console.log('Photo upload - Forwarding request to backend:', {
       url,
       hasAuthHeader: !!authHeader,
-      authHeaderPrefix: authHeader.substring(0, 30),
+      authHeaderPrefix: formattedAuthHeader.substring(0, 30),
       headerKeys: Object.keys(headers),
+      headerValues: Object.keys(headers).map((k) => `${k}: ${k.toLowerCase() === 'authorization' ? '[REDACTED]' : headers[k]}`),
+      formDataKeys: Array.from(formData.keys()),
+      method: 'POST',
     });
 
+    // Make the request to backend
+    // Important: When forwarding FormData, we must let fetch set Content-Type with boundary
     const res = await fetch(url, {
       method: 'POST',
       headers,
       body: formData,
-      // Don't set Content-Type for FormData - let browser set it with boundary
+      // Don't set Content-Type for FormData - fetch will automatically set it with boundary
+      // This is important - if we set Content-Type manually, it won't include the boundary
+    });
+
+    // Log response details for debugging
+    console.log('Photo upload - Backend response:', {
+      status: res.status,
+      statusText: res.statusText,
+      headers: Object.fromEntries(res.headers.entries()),
     });
 
     if (!res.ok) {
