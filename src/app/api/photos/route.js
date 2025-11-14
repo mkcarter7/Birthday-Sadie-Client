@@ -48,15 +48,11 @@ export async function POST(request) {
   const url = `${base.replace(/\/$/, '')}/api/photos/`;
 
   try {
-    // Get auth header BEFORE consuming the body
+    // Get the Authorization header from the incoming request
     const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
 
     if (!authHeader) {
       console.error('Photo upload - No authorization header provided');
-      console.error(
-        'Available headers:',
-        Array.from(request.headers.entries()).map(([k, v]) => `${k}: ${k === 'authorization' || k === 'Authorization' ? '[REDACTED]' : v.substring(0, 50)}`),
-      );
       return Response.json(
         {
           error: 'Authentication required',
@@ -66,53 +62,29 @@ export async function POST(request) {
       );
     }
 
-    // Ensure the header is properly formatted with Bearer prefix
-    const formattedAuthHeader = authHeader.startsWith('Bearer ') ? authHeader : `Bearer ${authHeader.replace(/^Bearer\s+/i, '')}`;
-
-    // Now consume the form data
+    // Get the form data
     const formData = await request.formData();
 
-    // Build headers object - explicitly set Authorization
-    // Note: When using FormData, we must NOT set Content-Type - fetch will set it with boundary
-    // But we MUST include Authorization header
-    const headers = {
-      Authorization: formattedAuthHeader,
-    };
-
-    console.log('Photo upload - Forwarding request to backend:', {
-      url,
-      hasAuthHeader: !!authHeader,
-      authHeaderPrefix: formattedAuthHeader.substring(0, 30),
-      headerKeys: Object.keys(headers),
-      headerValues: Object.keys(headers).map((k) => `${k}: ${k.toLowerCase() === 'authorization' ? '[REDACTED]' : headers[k]}`),
-      formDataKeys: Array.from(formData.keys()),
-      method: 'POST',
-    });
-
-    // Make the request to backend
-    // Important: When forwarding FormData, we must let fetch set Content-Type with boundary
+    // Forward the request to Heroku backend
+    // Important: Do NOT set Content-Type for FormData - fetch will set it automatically with boundary
     const res = await fetch(url, {
       method: 'POST',
-      headers,
-      body: formData,
-      // Don't set Content-Type for FormData - fetch will automatically set it with boundary
-      // This is important - if we set Content-Type manually, it won't include the boundary
+      headers: {
+        Authorization: authHeader, // Forward the auth header as-is
+        // Do NOT set Content-Type - fetch will set it with boundary for FormData
+      },
+      body: formData, // Forward the form data with the image
     });
 
-    // Log response details for debugging
-    console.log('Photo upload - Backend response:', {
-      status: res.status,
-      statusText: res.statusText,
-      headers: Object.fromEntries(res.headers.entries()),
-    });
-
+    // Handle response
     if (!res.ok) {
       const errorText = await res.text();
       console.error('Photo upload failed:', {
         status: res.status,
         url,
-        errorText: errorText.substring(0, 200), // First 200 chars
+        errorText: errorText.substring(0, 200),
       });
+
       // If response is HTML, it's likely a 404 or error page
       if (errorText.trim().startsWith('<!DOCTYPE') || errorText.trim().startsWith('<html')) {
         return Response.json(
@@ -122,6 +94,7 @@ export async function POST(request) {
           { status: res.status },
         );
       }
+
       return Response.json({ error: `Upload failed: ${res.status} ${errorText.substring(0, 100)}` }, { status: res.status });
     }
 
