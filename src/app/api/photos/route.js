@@ -1,5 +1,8 @@
 // Firebase auth is now handled on the client-side
 
+// Ensure this route is dynamic (not cached)
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const base = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '';
 
@@ -49,10 +52,20 @@ export async function POST(request) {
 
   try {
     // Get the Authorization header from the incoming request
-    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+    // Check multiple possible header name variations
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization') || request.headers.get('AUTHORIZATION');
+
+    // Log all headers for debugging (in production, this helps diagnose issues)
+    const allHeaders = Object.fromEntries(request.headers.entries());
+    console.log('Photo upload - Received headers:', {
+      hasAuth: !!authHeader,
+      headerKeys: Object.keys(allHeaders),
+      contentType: request.headers.get('content-type'),
+    });
 
     if (!authHeader) {
       console.error('Photo upload - No authorization header provided');
+      console.error('Photo upload - All received headers:', allHeaders);
       return Response.json(
         {
           error: 'Authentication required',
