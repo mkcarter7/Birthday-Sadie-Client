@@ -2,21 +2,39 @@
 
 export async function GET() {
   const base = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '';
+
+  if (!base) {
+    console.error('GET /api/photos - API base URL is not configured');
+    return Response.json({ error: 'API base URL is not configured' }, { status: 500 });
+  }
+
   const url = `${base.replace(/\/$/, '')}/api/photos/`;
 
   try {
+    console.log('GET /api/photos - Fetching from backend:', url);
     const res = await fetch(url, {
       next: { revalidate: 60 },
     });
+
     if (!res.ok) {
-      return Response.json({ error: 'Upstream error' }, { status: res.status });
+      const errorText = await res.text();
+      console.error('GET /api/photos - Backend error:', {
+        status: res.status,
+        url,
+        errorText: errorText.substring(0, 200),
+      });
+      return Response.json({ error: `Upstream error: ${res.status} ${errorText.substring(0, 100)}` }, { status: res.status });
     }
+
     const data = await res.json();
     // Normalize to an array of photo objects
     const photos = Array.isArray(data) ? data : data?.photos || data?.results || [];
+    console.log('GET /api/photos - Success, returning', photos.length, 'photos');
     return Response.json(photos);
   } catch (e) {
-    return Response.json({ error: 'Photos service unavailable' }, { status: 502 });
+    console.error('GET /api/photos - Fetch error:', e);
+    console.error('Attempted URL:', url);
+    return Response.json({ error: `Photos service unavailable: ${e.message}` }, { status: 502 });
   }
 }
 
@@ -36,6 +54,10 @@ export async function POST(request) {
 
     if (!authHeader) {
       console.error('Photo upload - No authorization header provided');
+      console.error(
+        'Available headers:',
+        Array.from(request.headers.entries()).map(([k]) => k),
+      );
       return Response.json(
         {
           error: 'Authentication required',
@@ -45,14 +67,16 @@ export async function POST(request) {
       );
     }
 
+    // Ensure the header is properly formatted
     const headers = {
-      Authorization: authHeader,
+      Authorization: authHeader.startsWith('Bearer ') ? authHeader : `Bearer ${authHeader.replace(/^Bearer\s+/i, '')}`,
     };
 
     console.log('Photo upload - Forwarding request to backend:', {
       url,
       hasAuthHeader: !!authHeader,
-      authHeaderPrefix: authHeader.substring(0, 20),
+      authHeaderPrefix: authHeader.substring(0, 30),
+      headerKeys: Object.keys(headers),
     });
 
     const res = await fetch(url, {
