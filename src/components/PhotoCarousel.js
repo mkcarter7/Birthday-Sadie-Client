@@ -15,6 +15,11 @@ function PhotoCard({ photo, index, onImageError, canDelete, onDelete, deleting }
   const uploader = photo.uploaded_by?.full_name || photo.uploaded_by?.username || photo.uploader_name;
   const photoId = photo.id;
 
+  // Debug logging
+  if (!src) {
+    console.warn('PhotoCard - No image URL found in photo:', photo);
+  }
+
   const handleImageLoad = (event) => {
     const { naturalWidth, naturalHeight } = event.target;
     if (naturalWidth && naturalHeight) {
@@ -253,14 +258,26 @@ export default function PhotoCarousel({ enableDeletion = false }) {
 
       try {
         // Fetch photos filtered by party ID
-        const res = await fetch(`/api/photos?party=${encodeURIComponent(PARTY_CONFIG.id)}`);
+        const url = `/api/photos?party=${encodeURIComponent(PARTY_CONFIG.id)}`;
+        console.log('PhotoCarousel - Fetching photos from:', url);
+        const res = await fetch(url);
+        console.log('PhotoCarousel - Response status:', res.status);
         if (res.ok) {
           const data = await res.json();
+          console.log('PhotoCarousel - Received data:', data);
           const list = Array.isArray(data) ? data : data?.photos || data?.results || [];
-          if (isMounted) setPhotos(list);
+          console.log('PhotoCarousel - Processed photos list:', list);
+          console.log('PhotoCarousel - Number of photos:', list.length);
+          if (isMounted) {
+            setPhotos(list);
+            console.log('PhotoCarousel - Photos set in state');
+          }
+        } else {
+          const errorText = await res.text();
+          console.error('PhotoCarousel - Failed to fetch photos:', res.status, errorText);
         }
       } catch (e) {
-        // ignore; show empty state
+        console.error('PhotoCarousel - Error fetching photos:', e);
       } finally {
         if (isMounted) setLoading(false);
       }
