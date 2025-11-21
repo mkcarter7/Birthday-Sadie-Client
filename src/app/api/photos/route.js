@@ -12,19 +12,29 @@ export async function GET(request) {
   }
 
   // Get party ID from query parameters (frontend can pass ?party=1)
-  const { searchParams } = new URL(request.url);
-  const partyId = searchParams.get('party') || process.env.NEXT_PUBLIC_PARTY_ID || '1';
-
-  // Build URL with party filter
-  let url = `${base.replace(/\/$/, '')}/api/photos/`;
-  if (partyId) {
-    url += `?party=${encodeURIComponent(partyId)}`;
-  }
+  // In Next.js App Router, request.url might be relative, so we need to handle it
+  let partyId = process.env.NEXT_PUBLIC_PARTY_ID || '1';
 
   try {
+    const urlObj = new URL(request.url);
+    const queryPartyId = urlObj.searchParams.get('party');
+    if (queryPartyId) {
+      partyId = queryPartyId;
+    }
+  } catch (e) {
+    // If request.url is not a full URL, try to get it from headers
+    console.warn('GET /api/photos - Could not parse request.url, using default party ID');
+  }
+
+  // Build URL with party filter
+  const url = `${base.replace(/\/$/, '')}/api/photos/?party=${encodeURIComponent(partyId)}`;
+
+  try {
+    console.log('GET /api/photos - Request URL:', request.url);
+    console.log('GET /api/photos - Party ID:', partyId);
     console.log('GET /api/photos - Fetching from backend:', url);
     const res = await fetch(url, {
-      next: { revalidate: 60 },
+      next: { revalidate: 0 }, // Don't cache - always fetch fresh
     });
 
     if (!res.ok) {
