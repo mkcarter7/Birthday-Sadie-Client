@@ -3,12 +3,15 @@
 import { useMemo, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import { PARTY_CONFIG } from '@/config/party';
+import getFrontendUrl from '@/utils/url';
 
 const event = {
   title: PARTY_CONFIG.name,
   date: PARTY_CONFIG.date,
   time: PARTY_CONFIG.time,
-  url: 'https://birthday-sadie-client.vercel.app/',
+  get url() {
+    return `${getFrontendUrl()}/`;
+  },
 };
 
 function normalizePhone(input) {

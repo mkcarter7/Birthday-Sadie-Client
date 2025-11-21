@@ -4,6 +4,8 @@ const nextConfig = {
   eslint: {
     dirs: ['pages', 'components', 'lib'], // Run ESLint on specified directories during development
   },
+  // Render.com configuration
+  output: 'standalone', // Optimize for serverless/containerized deployments
 };
 
 module.exports = nextConfig;

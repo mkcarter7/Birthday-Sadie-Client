@@ -1,13 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import PageHeader from '@/components/PageHeader';
+import getFrontendUrl from '@/utils/url';
 
-const PARTY_URL = 'https://birthday-sadie-client.vercel.app/';
+// Get party URL dynamically
+function getPartyUrl() {
+  return `${getFrontendUrl()}/`;
+}
 
 export default function QrPage() {
   const [copied, setCopied] = useState(false);
+  const PARTY_URL = useMemo(() => getPartyUrl(), []);
 
   const copyUrl = async () => {
     await navigator.clipboard.writeText(PARTY_URL);

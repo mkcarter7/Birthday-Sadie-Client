@@ -3,7 +3,7 @@
 // Ensure this route is dynamic (not cached)
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request) {
   const base = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '';
 
   if (!base) {
@@ -11,7 +11,15 @@ export async function GET() {
     return Response.json({ error: 'API base URL is not configured' }, { status: 500 });
   }
 
-  const url = `${base.replace(/\/$/, '')}/api/photos/`;
+  // Get party ID from query parameters (frontend can pass ?party=1)
+  const { searchParams } = new URL(request.url);
+  const partyId = searchParams.get('party') || process.env.NEXT_PUBLIC_PARTY_ID || '1';
+
+  // Build URL with party filter
+  let url = `${base.replace(/\/$/, '')}/api/photos/`;
+  if (partyId) {
+    url += `?party=${encodeURIComponent(partyId)}`;
+  }
 
   try {
     console.log('GET /api/photos - Fetching from backend:', url);
@@ -42,13 +50,23 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  // PROXY: This Next.js API route proxies requests to the Heroku backend
+  // Frontend calls: /api/photos (this route)
+  // This route forwards to: ${NEXT_PUBLIC_API_URL}/api/photos/ (Heroku)
+
+  // Step 1: Read API base URL from environment variable
   const base = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '';
 
   if (!base) {
+    console.error('Photo upload - NEXT_PUBLIC_API_URL is not set');
     return Response.json({ error: 'API base URL is not configured. Please set NEXT_PUBLIC_API_URL in Vercel environment variables.' }, { status: 500 });
   }
 
+  // Step 2: Construct the full backend URL
   const url = `${base.replace(/\/$/, '')}/api/photos/`;
+
+  // Log the backend URL being used (for debugging)
+  console.log('Photo upload - Proxying to backend URL:', url);
 
   try {
     // Get the Authorization header from the incoming request
@@ -75,15 +93,15 @@ export async function POST(request) {
       );
     }
 
-    // Get the form data
+    // Step 3: Get the form data from the incoming request
     const formData = await request.formData();
 
-    // Forward the request to Heroku backend
+    // Step 4: Forward the request to Heroku backend with Authorization header
     // Important: Do NOT set Content-Type for FormData - fetch will set it automatically with boundary
     const res = await fetch(url, {
       method: 'POST',
       headers: {
-        Authorization: authHeader, // Forward the auth header as-is
+        Authorization: authHeader, // Forward the Authorization header to Heroku
         // Do NOT set Content-Type - fetch will set it with boundary for FormData
       },
       body: formData, // Forward the form data with the image

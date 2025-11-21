@@ -6,6 +6,7 @@ import { useAuth } from '@/utils/context/authContext';
 import { signIn } from '@/utils/auth';
 import { isAdmin } from '@/utils/admin';
 import { photoBelongsToUser } from '@/utils/photos';
+import { PARTY_CONFIG } from '@/config/party';
 
 function PhotoCard({ photo, index, onImageError, canDelete, onDelete, deleting }) {
   const [aspectRatio, setAspectRatio] = useState(null);
@@ -251,7 +252,8 @@ export default function PhotoCarousel({ enableDeletion = false }) {
       }
 
       try {
-        const res = await fetch('/api/photos');
+        // Fetch photos filtered by party ID
+        const res = await fetch(`/api/photos?party=${encodeURIComponent(PARTY_CONFIG.id)}`);
         if (res.ok) {
           const data = await res.json();
           const list = Array.isArray(data) ? data : data?.photos || data?.results || [];

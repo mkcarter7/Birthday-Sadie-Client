@@ -1,0 +1,20 @@
+services:
+  # Frontend Next.js Application
+  - type: web
+    name: birthday-sadie-client
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Note: It's recommended to set environment variables in Render Dashboard
+      # rather than in this file for security. This file is just a template.
+      # 
+      # Required variables to set in Render Dashboard:
+      # - NEXT_PUBLIC_API_URL (your backend Render URL)
+      # - NEXT_PUBLIC_FIREBASE_API_KEY
+      # - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+      # - NEXT_PUBLIC_FIREBASE_PROJECT_ID
+      # - All other NEXT_PUBLIC_* variables from your .env file
+      # - NEXT_PUBLIC_FRONTEND_URL (optional, auto-detected if not set)
