@@ -248,7 +248,9 @@ export default function PhotoCarousel({ enableDeletion = false }) {
   useEffect(() => {
     let isMounted = true;
     async function load() {
+      console.log('PhotoCarousel - useEffect triggered, user:', user ? 'logged in' : 'not logged in');
       if (!user) {
+        console.log('PhotoCarousel - No user, clearing photos');
         if (isMounted) {
           setLoading(false);
           setPhotos([]);
@@ -270,7 +272,9 @@ export default function PhotoCarousel({ enableDeletion = false }) {
           console.log('PhotoCarousel - Number of photos:', list.length);
           if (isMounted) {
             setPhotos(list);
-            console.log('PhotoCarousel - Photos set in state');
+            console.log('PhotoCarousel - Photos set in state, current photos state:', list.length);
+          } else {
+            console.log('PhotoCarousel - Component unmounted, not setting photos');
           }
         } else {
           const errorText = await res.text();
@@ -279,7 +283,10 @@ export default function PhotoCarousel({ enableDeletion = false }) {
       } catch (e) {
         console.error('PhotoCarousel - Error fetching photos:', e);
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          console.log('PhotoCarousel - Loading set to false');
+        }
       }
     }
     load();
@@ -384,13 +391,27 @@ export default function PhotoCarousel({ enableDeletion = false }) {
     );
   }
 
+  console.log('PhotoCarousel - Render check:', {
+    userLoading,
+    loading,
+    user: !!user,
+    photosLength: photos.length,
+    hiddenIdsCount: hiddenIds.size,
+  });
+
   if (!photos.length) {
+    console.log('PhotoCarousel - No photos to display, photos array:', photos);
     return (
       <div className="card">
         <div className="muted">No photos yet. Be the first to share memories!</div>
       </div>
     );
   }
+
+  const visiblePhotos = photos.filter((p) => !hiddenIds.has(p.id));
+  console.log('PhotoCarousel - Rendering', visiblePhotos.length, 'visible photos out of', photos.length, 'total');
+  console.log('PhotoCarousel - Hidden IDs:', Array.from(hiddenIds));
+  console.log('PhotoCarousel - First photo sample:', visiblePhotos[0]);
 
   return (
     <div style={{ background: 'transparent', padding: 0 }}>
@@ -474,9 +495,9 @@ export default function PhotoCarousel({ enableDeletion = false }) {
             msOverflowStyle: 'none', // IE/Edge
           }}
         >
-          {photos.map((photo, i) => {
+          {visiblePhotos.map((photo, i) => {
             const photoId = photo.id;
-            if (hiddenIds.has(photoId)) return null;
+            console.log('PhotoCarousel - Rendering photo card:', photoId, 'src:', photo.image || photo.url);
             return <PhotoCard key={photoId} photo={photo} index={i} onImageError={handleImageError} canDelete={enableDeletion && (userIsAdmin || photoBelongsToUser(photo, user))} onDelete={handleDeletePhoto} deleting={deletingPhotoId === photoId} />;
           })}
         </div>
